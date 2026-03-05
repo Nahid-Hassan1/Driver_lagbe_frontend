@@ -30,4 +30,3 @@ Basic Admin Panel is added.
 (Password: admin)
 
 Also paste this, it shows only the admin page: flutter run -t lib/main_admin.dart
-    
