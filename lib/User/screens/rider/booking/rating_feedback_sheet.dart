@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'booking_models.dart';
+import '../rider_palette.dart';
 
 class RatingFeedbackResult {
   const RatingFeedbackResult({
@@ -24,7 +25,7 @@ Future<RatingFeedbackResult?> showRatingFeedbackSheet({
   return showModalBottomSheet<RatingFeedbackResult>(
     context: context,
     isScrollControlled: true,
-    backgroundColor: const Color(0xFF0F1A1E),
+    backgroundColor: riderBlack,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
     ),
@@ -46,7 +47,7 @@ Future<RatingFeedbackResult?> showRatingFeedbackSheet({
                   const Text(
                     'Rate your driver',
                     style: TextStyle(
-                      color: Colors.white,
+                      color: riderTextPrimary,
                       fontSize: 24,
                       fontWeight: FontWeight.w800,
                     ),
@@ -57,7 +58,7 @@ Future<RatingFeedbackResult?> showRatingFeedbackSheet({
                         ? 'How was your trip experience?'
                         : 'How was your trip with ${booking.assignedDriver}?',
                     style: const TextStyle(
-                      color: Color(0xFFB2C2CC),
+                      color: riderTextSecondary,
                       fontSize: 14.5,
                     ),
                   ),
@@ -71,7 +72,7 @@ Future<RatingFeedbackResult?> showRatingFeedbackSheet({
                           star <= selectedRating
                               ? Icons.star_rounded
                               : Icons.star_outline_rounded,
-                          color: const Color(0xFFFFD166),
+                          color: riderAccent,
                           size: 30,
                         ),
                       );
@@ -81,19 +82,19 @@ Future<RatingFeedbackResult?> showRatingFeedbackSheet({
                     controller: commentController,
                     minLines: 2,
                     maxLines: 4,
-                    style: const TextStyle(color: Colors.white),
+                    style: const TextStyle(color: riderTextPrimary),
                     decoration: InputDecoration(
                       hintText: 'Add comments (optional)',
-                      hintStyle: const TextStyle(color: Color(0xFF8EA2AC)),
+                      hintStyle: const TextStyle(color: riderTextMuted),
                       filled: true,
-                      fillColor: const Color(0xFF18303A),
+                      fillColor: riderSurfaceAlt,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Color(0xFF2D4A55)),
+                        borderSide: const BorderSide(color: riderBorderStrong),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Color(0xFF2D4A55)),
+                        borderSide: const BorderSide(color: riderBorderStrong),
                       ),
                     ),
                   ),
@@ -110,8 +111,8 @@ Future<RatingFeedbackResult?> showRatingFeedbackSheet({
                         );
                       },
                       style: FilledButton.styleFrom(
-                        backgroundColor: const Color(0xFF2AE0A0),
-                        foregroundColor: const Color(0xFF0A1814),
+                        backgroundColor: riderAccent,
+                        foregroundColor: riderAccentText,
                       ),
                       child: const Text('Submit feedback'),
                     ),

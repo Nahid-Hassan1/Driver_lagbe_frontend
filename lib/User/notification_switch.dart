@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'screens/rider/rider_palette.dart';
+
 class NotificationSwitch extends StatelessWidget {
   const NotificationSwitch({
     super.key,
@@ -20,14 +22,14 @@ class NotificationSwitch extends StatelessWidget {
       duration: const Duration(milliseconds: 180),
       curve: Curves.easeOutCubic,
       decoration: BoxDecoration(
-        color: value ? const Color(0xFF173239) : const Color(0xFF13242B),
+        color: value ? riderSurfaceRaised : riderSurface,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: value ? const Color(0xFF2C6B72) : const Color(0xFF26424D),
+          color: value ? riderAccent : riderBorder,
         ),
         boxShadow: const [
           BoxShadow(
-            color: Color(0x22000000),
+            color: riderShadow,
             blurRadius: 10,
             offset: Offset(0, 4),
           ),
@@ -35,21 +37,21 @@ class NotificationSwitch extends StatelessWidget {
       ),
       child: SwitchListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 12),
-        activeThumbColor: const Color(0xFF2AE0A0),
-        activeTrackColor: const Color(0xFF2A7A66),
+        activeThumbColor: riderAccent,
+        activeTrackColor: riderBorderStrong,
         value: value,
         onChanged: onChanged,
         title: Text(
           title,
           style: const TextStyle(
-            color: Colors.white,
+            color: riderTextPrimary,
             fontWeight: FontWeight.w700,
           ),
         ),
         subtitle: Text(
           subtitle,
           style: const TextStyle(
-            color: Color(0xFFB7CAD3),
+            color: riderTextSecondary,
             fontSize: 12.5,
           ),
         ),

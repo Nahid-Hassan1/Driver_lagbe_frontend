@@ -18,9 +18,9 @@ class TripInProgressCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: const Color(0xFF13242B),
+        color: const Color(0xFF111111),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFF2A5C7D)),
+        border: Border.all(color: const Color(0xFF2B2B2B)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -37,7 +37,7 @@ class TripInProgressCard extends StatelessWidget {
           Text(
             '${booking.pickupLocation} -> ${booking.dropOffLocation}',
             style: const TextStyle(
-              color: Color(0xFFD7EDF5),
+              color: Colors.white,
               fontWeight: FontWeight.w700,
             ),
           ),
@@ -47,7 +47,7 @@ class TripInProgressCard extends StatelessWidget {
                 ? 'Driver assigned'
                 : 'Driver ${booking.assignedDriver} is on your trip',
             style: const TextStyle(
-              color: Color(0xFFAAC0CB),
+              color: Color(0xFFB8B8B8),
               fontSize: 13,
             ),
           ),
@@ -55,8 +55,8 @@ class TripInProgressCard extends StatelessWidget {
           const LinearProgressIndicator(
             value: null,
             minHeight: 6,
-            backgroundColor: Color(0xFF203945),
-            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF2AE0A0)),
+            backgroundColor: Color(0xFF2A2A2A),
+            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
           ),
           const SizedBox(height: 10),
           SizedBox(
@@ -64,8 +64,8 @@ class TripInProgressCard extends StatelessWidget {
             child: FilledButton(
               onPressed: onCompleteTap,
               style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xFF2AE0A0),
-                foregroundColor: const Color(0xFF0A1814),
+                backgroundColor: Colors.white,
+                foregroundColor: Colors.black,
               ),
               child: const Text('Complete Trip'),
             ),

@@ -4,6 +4,7 @@ import 'package:driver_lagbe/User/booking_confirmation_notification.dart';
 import 'package:driver_lagbe/User/driver_arrival_updates_notification.dart';
 import 'package:driver_lagbe/User/promo_offers_notification.dart';
 import 'package:driver_lagbe/User/trip_start_end_alerts_notification.dart';
+import '../rider_palette.dart';
 
 class RiderAccountTab extends StatefulWidget {
   const RiderAccountTab({super.key});
@@ -25,7 +26,7 @@ class _RiderAccountTabState extends State<RiderAccountTab> {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFF0A1215), Color(0xFF12232B), Color(0xFF070A0B)],
+          colors: [riderBlack, riderBackground, riderBlack],
           stops: [0.0, 0.45, 1.0],
         ),
       ),
@@ -37,7 +38,7 @@ class _RiderAccountTabState extends State<RiderAccountTab> {
             const Text(
               'Account',
               style: TextStyle(
-                color: Colors.white,
+                color: riderTextPrimary,
                 fontSize: 30,
                 fontWeight: FontWeight.w800,
               ),
@@ -45,7 +46,7 @@ class _RiderAccountTabState extends State<RiderAccountTab> {
             const SizedBox(height: 4),
             const Text(
               'Manage profile, notifications, and ride preferences.',
-              style: TextStyle(color: Color(0xFFB0C5CF), fontSize: 14),
+              style: TextStyle(color: riderTextSecondary, fontSize: 14),
             ),
             const SizedBox(height: 14),
             _ProfileHero(onTap: () => _showSimpleSnack('Profile opened')),
@@ -137,12 +138,12 @@ class _ProfileHero extends StatelessWidget {
             gradient: const LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [Color(0xFF1A3B46), Color(0xFF16303A), Color(0xFF10242B)],
+              colors: [riderSurfaceRaised, riderSurfaceAlt, riderSurface],
             ),
-            border: Border.all(color: const Color(0xFF35505A)),
+            border: Border.all(color: riderBorderStrong),
             boxShadow: const [
               BoxShadow(
-                color: Color(0x33050A0D),
+                color: riderShadow,
                 blurRadius: 14,
                 offset: Offset(0, 8),
               ),
@@ -152,8 +153,8 @@ class _ProfileHero extends StatelessWidget {
             children: [
               CircleAvatar(
                 radius: 30,
-                backgroundColor: Color(0xFF2AE0A0),
-                child: Icon(Icons.person, size: 34, color: Color(0xFF062219)),
+                backgroundColor: riderAccent,
+                child: Icon(Icons.person, size: 34, color: riderAccentText),
               ),
               SizedBox(width: 12),
               Expanded(
@@ -163,20 +164,20 @@ class _ProfileHero extends StatelessWidget {
                     Text(
                       'Nahid',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: riderTextPrimary,
                         fontSize: 22,
                         fontWeight: FontWeight.w800,
                       ),
                     ),
                     Text(
                       '+880 17XXXXXXXX',
-                      style: TextStyle(color: Color(0xFFB8CED7), fontSize: 14),
+                      style: TextStyle(color: riderTextSecondary, fontSize: 14),
                     ),
                     SizedBox(height: 6),
                     Text(
                       'Rider Level: Gold',
                       style: TextStyle(
-                        color: Color(0xFF8FE6FF),
+                        color: riderAccentSoft,
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
                       ),
@@ -186,7 +187,7 @@ class _ProfileHero extends StatelessWidget {
               ),
               Icon(
                 Icons.arrow_forward_ios_rounded,
-                color: Color(0xFFB8CED7),
+                color: riderTextSecondary,
                 size: 16,
               ),
             ],
@@ -216,9 +217,9 @@ class _QuickBalanceRow extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.only(right: 8),
             child: Material(
-              color: const Color(0xFF13242B),
+              color: riderSurface,
               borderRadius: BorderRadius.circular(14),
-              shadowColor: const Color(0x33000000),
+              shadowColor: riderShadow,
               elevation: 1.5,
               child: InkWell(
                 onTap: () => onTap(item.$1),
@@ -230,19 +231,19 @@ class _QuickBalanceRow extends StatelessWidget {
                   ),
                   child: Column(
                     children: [
-                      Icon(item.$3, color: const Color(0xFF8FE6FF), size: 20),
+                      Icon(item.$3, color: riderAccentSoft, size: 20),
                       const SizedBox(height: 6),
                       Text(
                         item.$1,
                         style: const TextStyle(
-                          color: Colors.white,
+                          color: riderTextPrimary,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
                       Text(
                         item.$2,
                         style: const TextStyle(
-                          color: Color(0xFFB7CAD3),
+                          color: riderTextSecondary,
                           fontSize: 12.5,
                         ),
                       ),
@@ -268,7 +269,7 @@ class _SectionTitle extends StatelessWidget {
     return Text(
       title,
       style: const TextStyle(
-        color: Colors.white,
+        color: riderTextPrimary,
         fontSize: 20,
         fontWeight: FontWeight.w800,
         letterSpacing: 0.2,
@@ -295,12 +296,12 @@ class _ActionTile extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
-        color: const Color(0xFF13242B),
+        color: riderSurface,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFF26424D)),
+        border: Border.all(color: riderBorder),
         boxShadow: const [
           BoxShadow(
-            color: Color(0x22000000),
+            color: riderShadow,
             blurRadius: 8,
             offset: Offset(0, 4),
           ),
@@ -308,21 +309,21 @@ class _ActionTile extends StatelessWidget {
       ),
       child: ListTile(
         onTap: onTap,
-        leading: Icon(icon, color: const Color(0xFF8FE6FF)),
+        leading: Icon(icon, color: riderAccentSoft),
         title: Text(
           label,
           style: const TextStyle(
-            color: Colors.white,
+            color: riderTextPrimary,
             fontWeight: FontWeight.w700,
           ),
         ),
         subtitle: Text(
           subtitle,
-          style: const TextStyle(color: Color(0xFFB7CAD3), fontSize: 12.5),
+          style: const TextStyle(color: riderTextSecondary, fontSize: 12.5),
         ),
         trailing: const Icon(
           Icons.chevron_right_rounded,
-          color: Color(0xFFB7CAD3),
+          color: riderTextSecondary,
         ),
       ),
     );
@@ -337,9 +338,9 @@ class _LogoutButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: const Color(0xFF3A1B25),
+      color: riderSurfaceRaised,
       borderRadius: BorderRadius.circular(14),
-      shadowColor: const Color(0x33000000),
+      shadowColor: riderShadow,
       elevation: 1.5,
       child: InkWell(
         onTap: onTap,
@@ -349,12 +350,12 @@ class _LogoutButton extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.logout_rounded, color: Color(0xFFFFC7D6)),
+              Icon(Icons.logout_rounded, color: riderAccent),
               SizedBox(width: 8),
               Text(
                 'Log out',
                 style: TextStyle(
-                  color: Color(0xFFFFC7D6),
+                  color: riderTextPrimary,
                   fontWeight: FontWeight.w800,
                   fontSize: 16,
                 ),

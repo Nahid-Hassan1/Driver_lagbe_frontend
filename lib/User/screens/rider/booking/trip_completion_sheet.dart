@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'booking_models.dart';
+import '../rider_palette.dart';
 
 Future<void> showTripCompletionSheet({
   required BuildContext context,
@@ -12,7 +13,7 @@ Future<void> showTripCompletionSheet({
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
-    backgroundColor: const Color(0xFF0F1A1E),
+    backgroundColor: riderBlack,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
     ),
@@ -27,7 +28,7 @@ Future<void> showTripCompletionSheet({
                 const Text(
                   'Trip completed',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: riderTextPrimary,
                     fontSize: 24,
                     fontWeight: FontWeight.w800,
                   ),
@@ -36,7 +37,7 @@ Future<void> showTripCompletionSheet({
                 Text(
                   'Completed at ${formatBookingDateTime(completedAt)}',
                   style: const TextStyle(
-                    color: Color(0xFFB7CAD3),
+                    color: riderTextSecondary,
                     fontSize: 13.5,
                   ),
                 ),
@@ -44,7 +45,7 @@ Future<void> showTripCompletionSheet({
                 Text(
                   '${booking.pickupLocation} -> ${booking.dropOffLocation}',
                   style: const TextStyle(
-                    color: Color(0xFFD7EDF5),
+                    color: riderTextPrimary,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -52,12 +53,12 @@ Future<void> showTripCompletionSheet({
                 Container(
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF13242B),
+                    color: riderSurface,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: const Color(0xFF2A434E)),
+                    border: Border.all(color: riderBorder),
                     boxShadow: const [
                       BoxShadow(
-                        color: Color(0x22000000),
+                        color: riderShadow,
                         blurRadius: 10,
                         offset: Offset(0, 6),
                       ),
@@ -69,7 +70,7 @@ Future<void> showTripCompletionSheet({
                       const Text(
                         'Final invoice',
                         style: TextStyle(
-                          color: Colors.white,
+                          color: riderTextPrimary,
                           fontSize: 18,
                           fontWeight: FontWeight.w800,
                         ),
@@ -84,7 +85,7 @@ Future<void> showTripCompletionSheet({
                       ),
                       _InvoiceRow(label: 'Scheduling fee', amount: fare.schedulingFee),
                       _InvoiceRow(label: 'Discount', amount: -fare.discount, negative: true),
-                      const Divider(color: Color(0xFF2A434E)),
+                      const Divider(color: riderBorder),
                       _InvoiceRow(
                         label: 'Total paid',
                         amount: fare.totalBdt,
@@ -99,8 +100,8 @@ Future<void> showTripCompletionSheet({
                   child: FilledButton(
                     onPressed: () => Navigator.of(context).pop(),
                     style: FilledButton.styleFrom(
-                      backgroundColor: const Color(0xFF2AE0A0),
-                      foregroundColor: const Color(0xFF0A1814),
+                      backgroundColor: riderAccent,
+                      foregroundColor: riderAccentText,
                     ),
                     child: const Text('Done'),
                   ),
@@ -129,7 +130,7 @@ class _InvoiceRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Color textColor = emphasize ? Colors.white : const Color(0xFFD4EAF4);
+    final Color textColor = emphasize ? riderTextPrimary : riderTextSecondary;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
@@ -147,7 +148,7 @@ class _InvoiceRow extends StatelessWidget {
           Text(
             '${negative ? '-' : ''}BDT ${amount.abs()}',
             style: TextStyle(
-              color: negative ? const Color(0xFF9CF2B8) : textColor,
+              color: negative ? riderTextMuted : textColor,
               fontSize: emphasize ? 16 : 14,
               fontWeight: emphasize ? FontWeight.w800 : FontWeight.w700,
             ),

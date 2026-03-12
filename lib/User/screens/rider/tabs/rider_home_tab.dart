@@ -1,6 +1,8 @@
 ﻿import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 import '../booking/booking_confirmation_page.dart';
 import '../booking/booking_models.dart';
 import '../booking/booking_store.dart';
@@ -8,6 +10,21 @@ import '../booking/payment_sheets.dart';
 import '../booking/rating_feedback_sheet.dart';
 import '../booking/trip_completion_sheet.dart';
 import '../booking/trip_progress_card.dart';
+
+const Color _monoBlack = Color(0xFF000000);
+const Color _monoBackground = Color(0xFF080808);
+const Color _monoSurface = Color(0xFF111111);
+const Color _monoSurfaceAlt = Color(0xFF171717);
+const Color _monoSurfaceRaised = Color(0xFF1F1F1F);
+const Color _monoBorder = Color(0xFF2B2B2B);
+const Color _monoBorderStrong = Color(0xFF4A4A4A);
+const Color _monoTextPrimary = Colors.white;
+const Color _monoTextSecondary = Color(0xFFB8B8B8);
+const Color _monoTextMuted = Color(0xFF8C8C8C);
+const Color _monoAccent = Colors.white;
+const Color _monoAccentSoft = Color(0xFFEDEDED);
+const Color _monoAccentText = Colors.black;
+const Color _monoOverlay = Color(0xD9121212);
 
 class RiderHomeTab extends StatefulWidget {
   const RiderHomeTab({super.key, this.onParcelTap, this.onAccountTap});
@@ -34,40 +51,50 @@ class _RiderHomeTabState extends State<RiderHomeTab> {
   static const List<_DriverCandidate> _driverCandidates = <_DriverCandidate>[
     _DriverCandidate(
       name: 'Tariq',
-      vehicle: 'Sedan',
+      vehicle: 'Bike',
       distanceKm: 1.2,
       etaMin: 4,
       rating: 4.9,
     ),
     _DriverCandidate(
       name: 'Sabbir',
-      vehicle: 'SUV',
+      vehicle: 'Car',
       distanceKm: 2.6,
       etaMin: 7,
       rating: 4.8,
     ),
     _DriverCandidate(
       name: 'Nabil',
-      vehicle: 'Private Car',
+      vehicle: 'Bike',
       distanceKm: 3.1,
       etaMin: 9,
       rating: 4.7,
     ),
     _DriverCandidate(
       name: 'Javed',
-      vehicle: 'Microbus',
+      vehicle: 'Car',
       distanceKm: 6.4,
       etaMin: 16,
       rating: 4.9,
     ),
     _DriverCandidate(
       name: 'Rafsan',
-      vehicle: 'Sedan',
+      vehicle: 'Car',
       distanceKm: 8.2,
       etaMin: 21,
       rating: 4.6,
     ),
   ];
+  static const Map<String, LatLng> _locationCoordinates = <String, LatLng>{
+    'Current location': LatLng(23.8103, 90.4125),
+    'Bashundhara Residential Area': LatLng(23.8195, 90.4386),
+    'Banani 11': LatLng(23.7936, 90.4067),
+    'Dhanmondi 27': LatLng(23.7461, 90.3742),
+    'Uttara Sector 7': LatLng(23.8759, 90.3795),
+    'Motijheel Commercial': LatLng(23.7312, 90.4178),
+    'Gulshan Circle 2': LatLng(23.7927, 90.4143),
+    'Airport Terminal': LatLng(23.8515, 90.4088),
+  };
   static const Map<String, int> _driverExperienceYears = <String, int>{
     'Tariq': 6,
     'Sabbir': 5,
@@ -76,22 +103,25 @@ class _RiderHomeTabState extends State<RiderHomeTab> {
     'Rafsan': 3,
   };
 
-  String _selectedNeed = 'Daily commute';
   String _pickupLocation = 'Current location';
   String _dropOffLocation = _locationPrompt;
-  String _selectedServiceType = 'Trip';
+  String _selectedServiceType = 'Car';
   String _driverSearchMode = 'Nearby';
   PaymentMethodType _selectedPaymentMethod = PaymentMethodType.cash;
+  bool _showBookingManagement = false;
   int _nextBookingId = 3001;
   final BookingStore _bookingStore = BookingStore.instance;
 
   bool get _canBook => _dropOffLocation != _locationPrompt;
 
   List<_DriverCandidate> get _filteredDrivers {
-    return _driversForSearchMode(_driverSearchMode);
+    return _driversForSelection(_driverSearchMode, _selectedServiceType);
   }
 
-  List<_DriverCandidate> _driversForSearchMode(String searchMode) {
+  List<_DriverCandidate> _driversForSelection(
+    String searchMode,
+    String serviceType,
+  ) {
     final bool nearbyOnly = searchMode == 'Nearby';
     final List<_DriverCandidate> filtered =
         _driverCandidates
@@ -100,9 +130,15 @@ class _RiderHomeTabState extends State<RiderHomeTab> {
                   ? driver.distanceKm <= 3.5
                   : driver.distanceKm > 3.5,
             )
+            .where((driver) => driver.vehicle == serviceType)
             .toList()
           ..sort((a, b) => a.etaMin.compareTo(b.etaMin));
     return filtered;
+  }
+
+  LatLng _coordinateForLocation(String location) {
+    return _locationCoordinates[location] ??
+        _locationCoordinates['Current location']!;
   }
 
   double _distanceForRoute({
@@ -145,6 +181,19 @@ class _RiderHomeTabState extends State<RiderHomeTab> {
     final int pickupDelay = driverSearchMode == 'Nearby' ? 0 : 6;
 
     switch (serviceType) {
+      case 'Bike':
+        return _RideEstimate(
+          priceBdt: 55 + (distanceKm * 20).round() + pickupDelay,
+          timeLabel: '${math.max(7, 10 + (distanceKm * 3).round())} min',
+          distanceLabel: '${distanceKm.toStringAsFixed(1)} km by bike',
+        );
+      case 'Car':
+        return _RideEstimate(
+          priceBdt: 95 + (distanceKm * 34).round() + pickupDelay * 2,
+          timeLabel:
+              '${math.max(9, 12 + (distanceKm * 4).round() + pickupDelay)} min',
+          distanceLabel: '${distanceKm.toStringAsFixed(1)} km by car',
+        );
       case 'Hourly':
         return _RideEstimate(
           priceBdt:
@@ -182,7 +231,7 @@ class _RiderHomeTabState extends State<RiderHomeTab> {
   void _showFeatureSheet(String title, String subtitle) {
     showModalBottomSheet<void>(
       context: context,
-      backgroundColor: const Color(0xFF0F1A1E),
+      backgroundColor: _monoBlack,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -204,7 +253,7 @@ class _RiderHomeTabState extends State<RiderHomeTab> {
               const SizedBox(height: 8),
               Text(
                 subtitle,
-                style: const TextStyle(color: Color(0xFFB2C2CC), fontSize: 15),
+                style: const TextStyle(color: _monoTextSecondary, fontSize: 15),
               ),
               const SizedBox(height: 16),
               SizedBox(
@@ -212,8 +261,8 @@ class _RiderHomeTabState extends State<RiderHomeTab> {
                 child: FilledButton(
                   onPressed: () => Navigator.of(context).pop(),
                   style: FilledButton.styleFrom(
-                    backgroundColor: const Color(0xFF2AE0A0),
-                    foregroundColor: const Color(0xFF0A1814),
+                    backgroundColor: _monoAccent,
+                    foregroundColor: _monoAccentText,
                   ),
                   child: const Text('Continue'),
                 ),
@@ -228,7 +277,7 @@ class _RiderHomeTabState extends State<RiderHomeTab> {
   Future<void> _selectLocation({required bool pickup}) async {
     final String? selectedLocation = await showModalBottomSheet<String>(
       context: context,
-      backgroundColor: const Color(0xFF0F1A1E),
+      backgroundColor: _monoBlack,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -251,7 +300,7 @@ class _RiderHomeTabState extends State<RiderHomeTab> {
                 const SizedBox(height: 8),
                 const Text(
                   'Choose a saved place for fast estimate updates.',
-                  style: TextStyle(color: Color(0xFFB2C2CC), fontSize: 14),
+                  style: TextStyle(color: _monoTextSecondary, fontSize: 14),
                 ),
                 const SizedBox(height: 12),
                 Flexible(
@@ -259,7 +308,7 @@ class _RiderHomeTabState extends State<RiderHomeTab> {
                     shrinkWrap: true,
                     itemCount: _locationSuggestions.length,
                     separatorBuilder: (_, _) =>
-                        const Divider(color: Color(0xFF29424D), height: 1),
+                        const Divider(color: _monoBorder, height: 1),
                     itemBuilder: (context, index) {
                       final String location = _locationSuggestions[index];
                       return ListTile(
@@ -269,7 +318,7 @@ class _RiderHomeTabState extends State<RiderHomeTab> {
                           index == 0
                               ? Icons.my_location_rounded
                               : Icons.location_on_outlined,
-                          color: const Color(0xFF8FE6FF),
+                          color: _monoAccentSoft,
                         ),
                         title: Text(
                           location,
@@ -306,7 +355,7 @@ class _RiderHomeTabState extends State<RiderHomeTab> {
     String selectedMode = _driverSearchMode;
     showModalBottomSheet<void>(
       context: context,
-      backgroundColor: const Color(0xFF0F1A1E),
+      backgroundColor: _monoBlack,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -330,7 +379,7 @@ class _RiderHomeTabState extends State<RiderHomeTab> {
                   const SizedBox(height: 8),
                   const Text(
                     'Choose how far we search for available drivers.',
-                    style: TextStyle(color: Color(0xFFB2C2CC), fontSize: 15),
+                    style: TextStyle(color: _monoTextSecondary, fontSize: 15),
                   ),
                   const SizedBox(height: 14),
                   Wrap(
@@ -342,12 +391,12 @@ class _RiderHomeTabState extends State<RiderHomeTab> {
                         selected: selected,
                         onSelected: (_) =>
                             setModalState(() => selectedMode = mode),
-                        selectedColor: const Color(0xFF2AE0A0),
-                        backgroundColor: const Color(0xFF1A3038),
+                        selectedColor: _monoAccent,
+                        backgroundColor: _monoSurfaceAlt,
                         labelStyle: TextStyle(
                           color: selected
-                              ? const Color(0xFF062219)
-                              : const Color(0xFFE0F4FC),
+                              ? _monoAccentText
+                              : _monoTextPrimary,
                           fontWeight: FontWeight.w700,
                         ),
                         shape: RoundedRectangleBorder(
@@ -362,7 +411,7 @@ class _RiderHomeTabState extends State<RiderHomeTab> {
                         ? 'Nearby: prioritizes faster pickup within ~3 km.'
                         : 'Far: includes more drivers up to ~10 km away.',
                     style: const TextStyle(
-                      color: Color(0xFF9EB4BE),
+                      color: _monoTextMuted,
                       fontSize: 13.5,
                     ),
                   ),
@@ -375,8 +424,8 @@ class _RiderHomeTabState extends State<RiderHomeTab> {
                         Navigator.of(context).pop();
                       },
                       style: FilledButton.styleFrom(
-                        backgroundColor: const Color(0xFF2AE0A0),
-                        foregroundColor: const Color(0xFF0A1814),
+                        backgroundColor: _monoAccent,
+                        foregroundColor: _monoAccentText,
                       ),
                       child: const Text('Apply'),
                     ),
@@ -594,7 +643,7 @@ class _RiderHomeTabState extends State<RiderHomeTab> {
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: const Color(0xFF0F1A1E),
+      backgroundColor: _monoBlack,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -649,18 +698,18 @@ class _RiderHomeTabState extends State<RiderHomeTab> {
                     Wrap(
                       spacing: 8,
                       runSpacing: 8,
-                      children: ['Hourly', 'Day', 'Trip'].map((service) {
+                      children: ['Bike', 'Car'].map((service) {
                         return ChoiceChip(
                           label: Text(service),
                           selected: serviceType == service,
                           onSelected: (_) =>
                               setModalState(() => serviceType = service),
-                          selectedColor: const Color(0xFF2AE0A0),
-                          backgroundColor: const Color(0xFF1A3038),
+                          selectedColor: _monoAccent,
+                          backgroundColor: _monoSurfaceAlt,
                           labelStyle: TextStyle(
                             color: serviceType == service
-                                ? const Color(0xFF062219)
-                                : const Color(0xFFE0F4FC),
+                                ? _monoAccentText
+                                : _monoTextPrimary,
                             fontWeight: FontWeight.w700,
                           ),
                         );
@@ -675,12 +724,12 @@ class _RiderHomeTabState extends State<RiderHomeTab> {
                           selected: searchMode == mode,
                           onSelected: (_) =>
                               setModalState(() => searchMode = mode),
-                          selectedColor: const Color(0xFF2AE0A0),
-                          backgroundColor: const Color(0xFF1A3038),
+                          selectedColor: _monoAccent,
+                          backgroundColor: _monoSurfaceAlt,
                           labelStyle: TextStyle(
                             color: searchMode == mode
-                                ? const Color(0xFF062219)
-                                : const Color(0xFFE0F4FC),
+                                ? _monoAccentText
+                                : _monoTextPrimary,
                             fontWeight: FontWeight.w700,
                           ),
                         );
@@ -688,7 +737,7 @@ class _RiderHomeTabState extends State<RiderHomeTab> {
                     ),
                     const SizedBox(height: 10),
                     Material(
-                      color: const Color(0xFF18303A),
+                      color: _monoSurfaceAlt,
                       borderRadius: BorderRadius.circular(12),
                       child: InkWell(
                         onTap: () async {
@@ -711,7 +760,7 @@ class _RiderHomeTabState extends State<RiderHomeTab> {
                             children: [
                               Icon(
                                 paymentMethod.icon,
-                                color: const Color(0xFF8FE6FF),
+                                color: _monoAccentSoft,
                               ),
                               const SizedBox(width: 10),
                               Expanded(
@@ -725,7 +774,7 @@ class _RiderHomeTabState extends State<RiderHomeTab> {
                               ),
                               const Icon(
                                 Icons.chevron_right_rounded,
-                                color: Color(0xFF8DA8B4),
+                                color: _monoTextMuted,
                               ),
                             ],
                           ),
@@ -741,12 +790,12 @@ class _RiderHomeTabState extends State<RiderHomeTab> {
                             selected: !isScheduled,
                             onSelected: (_) =>
                                 setModalState(() => isScheduled = false),
-                            selectedColor: const Color(0xFF2AE0A0),
-                            backgroundColor: const Color(0xFF1A3038),
+                            selectedColor: _monoAccent,
+                            backgroundColor: _monoSurfaceAlt,
                             labelStyle: TextStyle(
                               color: !isScheduled
-                                  ? const Color(0xFF062219)
-                                  : const Color(0xFFE0F4FC),
+                                  ? _monoAccentText
+                                  : _monoTextPrimary,
                               fontWeight: FontWeight.w700,
                             ),
                           ),
@@ -758,12 +807,12 @@ class _RiderHomeTabState extends State<RiderHomeTab> {
                             selected: isScheduled,
                             onSelected: (_) =>
                                 setModalState(() => isScheduled = true),
-                            selectedColor: const Color(0xFF2AE0A0),
-                            backgroundColor: const Color(0xFF1A3038),
+                            selectedColor: _monoAccent,
+                            backgroundColor: _monoSurfaceAlt,
                             labelStyle: TextStyle(
                               color: isScheduled
-                                  ? const Color(0xFF062219)
-                                  : const Color(0xFFE0F4FC),
+                                  ? _monoAccentText
+                                  : _monoTextPrimary,
                               fontWeight: FontWeight.w700,
                             ),
                           ),
@@ -773,7 +822,7 @@ class _RiderHomeTabState extends State<RiderHomeTab> {
                     if (isScheduled) ...[
                       const SizedBox(height: 10),
                       Material(
-                        color: const Color(0xFF18303A),
+                        color: _monoSurfaceAlt,
                         borderRadius: BorderRadius.circular(12),
                         child: InkWell(
                           onTap: () async {
@@ -795,7 +844,7 @@ class _RiderHomeTabState extends State<RiderHomeTab> {
                               children: [
                                 const Icon(
                                   Icons.calendar_month_rounded,
-                                  color: Color(0xFF8FE6FF),
+                                  color: _monoAccentSoft,
                                 ),
                                 const SizedBox(width: 10),
                                 Expanded(
@@ -809,7 +858,7 @@ class _RiderHomeTabState extends State<RiderHomeTab> {
                                 ),
                                 const Icon(
                                   Icons.chevron_right_rounded,
-                                  color: Color(0xFF8DA8B4),
+                                  color: _monoTextMuted,
                                 ),
                               ],
                             ),
@@ -821,7 +870,7 @@ class _RiderHomeTabState extends State<RiderHomeTab> {
                     Text(
                       'Updated estimate: BDT ${preview.priceBdt}',
                       style: const TextStyle(
-                        color: Color(0xFFD7EDF5),
+                        color: _monoTextPrimary,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
@@ -859,8 +908,8 @@ class _RiderHomeTabState extends State<RiderHomeTab> {
                           );
                         },
                         style: FilledButton.styleFrom(
-                          backgroundColor: const Color(0xFF2AE0A0),
-                          foregroundColor: const Color(0xFF0A1814),
+                          backgroundColor: _monoAccent,
+                          foregroundColor: _monoAccentText,
                         ),
                         child: const Text('Save changes'),
                       ),
@@ -934,13 +983,29 @@ class _RiderHomeTabState extends State<RiderHomeTab> {
   Widget build(BuildContext context) {
     final List<_DriverCandidate> availableDrivers = _filteredDrivers;
     final _RideEstimate estimate = _estimate;
+    final _RideEstimate bikeEstimate = _estimateForRequest(
+      pickupLocation: _pickupLocation,
+      dropOffLocation: _dropOffLocation,
+      serviceType: 'Bike',
+      driverSearchMode: _driverSearchMode,
+    );
+    final _RideEstimate carEstimate = _estimateForRequest(
+      pickupLocation: _pickupLocation,
+      dropOffLocation: _dropOffLocation,
+      serviceType: 'Car',
+      driverSearchMode: _driverSearchMode,
+    );
+    final LatLng pickupPoint = _coordinateForLocation(_pickupLocation);
+    final LatLng? dropOffPoint = _dropOffLocation == _locationPrompt
+        ? null
+        : _coordinateForLocation(_dropOffLocation);
 
     return DecoratedBox(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFF0A1215), Color(0xFF12232B), Color(0xFF070A0B)],
+          colors: [_monoBlack, _monoBackground, _monoBlack],
           stops: [0.0, 0.45, 1.0],
         ),
       ),
@@ -948,15 +1013,21 @@ class _RiderHomeTabState extends State<RiderHomeTab> {
         child: AnimatedBuilder(
           animation: _bookingStore,
           builder: (context, _) {
-            final List<BookingRequest> managedBookings =
-                _bookingStore.activeManagementBookings;
             final BookingRequest? ongoingTrip = _bookingStore.firstOngoing;
+            final List<BookingRequest> managedBookings =
+                _bookingStore.activeManagementBookings.where((booking) {
+                  return ongoingTrip == null || booking.id != ongoingTrip.id;
+                }).toList();
 
             return ListView(
               physics: const BouncingScrollPhysics(),
               padding: const EdgeInsets.fromLTRB(16, 10, 16, 22),
               children: [
                 _HeaderSection(
+                  pickupLocation: _pickupLocation,
+                  dropOffLocation: _dropOffLocation,
+                  onPickupTap: () => _selectLocation(pickup: true),
+                  onDropOffTap: () => _selectLocation(pickup: false),
                   onAvatarTap:
                       widget.onAccountTap ??
                       () => _showFeatureSheet(
@@ -965,119 +1036,51 @@ class _RiderHomeTabState extends State<RiderHomeTab> {
                       ),
                 ),
                 const SizedBox(height: 14),
-                _ModeSwitcher(
-                  onRideTap: () => _showFeatureSheet(
-                    'Ride mode',
-                    'You are currently in ride mode.',
+                if (ongoingTrip != null) ...[
+                  TripInProgressCard(
+                    booking: ongoingTrip,
+                    onCompleteTap: () => _completeTrip(ongoingTrip),
                   ),
-                  onParcelTap:
-                      widget.onParcelTap ??
-                      () => _showFeatureSheet(
-                        'Parcel mode',
-                        'Switch to Services tab to send or receive parcels.',
-                      ),
-                ),
-                const SizedBox(height: 14),
+                  const SizedBox(height: 14),
+                ],
                 _RouteComposerCard(
                   pickupLocation: _pickupLocation,
                   dropOffLocation: _dropOffLocation,
+                  pickupPoint: pickupPoint,
+                  dropOffPoint: dropOffPoint,
                   selectedServiceType: _selectedServiceType,
                   selectedPaymentMethod: _selectedPaymentMethod,
                   driverSearchMode: _driverSearchMode,
                   availableDrivers: availableDrivers,
                   estimate: estimate,
+                  bikeEstimate: bikeEstimate,
+                  carEstimate: carEstimate,
+                  bikeDriverCount:
+                      _driversForSelection(_driverSearchMode, 'Bike').length,
+                  carDriverCount:
+                      _driversForSelection(_driverSearchMode, 'Car').length,
                   canBook: _canBook,
-                  onPickupTap: () => _selectLocation(pickup: true),
-                  onDropOffTap: () => _selectLocation(pickup: false),
                   onServiceTypeTap: _setServiceType,
                   onPaymentTap: _selectDefaultPaymentMethod,
                   onSettingsTap: _openDriverSearchSettings,
                   onInstantBookTap: _bookInstant,
                   onScheduleTap: _scheduleBooking,
                 ),
-                if (ongoingTrip != null) ...[
-                  const SizedBox(height: 12),
-                  TripInProgressCard(
-                    booking: ongoingTrip,
-                    onCompleteTap: () => _completeTrip(ongoingTrip),
-                  ),
-                ],
-                const SizedBox(height: 16),
+                const SizedBox(height: 20),
                 _BookingManagementSection(
                   bookings: managedBookings,
+                  isExpanded: _showBookingManagement,
+                  onToggleExpanded: () {
+                    setState(() {
+                      _showBookingManagement = !_showBookingManagement;
+                    });
+                  },
                   onCancelTap: _cancelBooking,
                   onModifyTap: _modifyBooking,
                   onPaymentTap: _changeBookingPayment,
                   onInvoiceTap: _openInvoice,
                   onStartTap: _startTrip,
                   onCompleteTap: _completeTrip,
-                ),
-                const SizedBox(height: 20),
-                _SectionTitle(
-                  title: 'What do you need today?',
-                  trailing: 'Customize',
-                  onTap: () => _showFeatureSheet(
-                    'Personalize your home',
-                    'Reorder quick needs and default ride preferences.',
-                  ),
-                ),
-                const SizedBox(height: 12),
-                _NeedPillsSection(
-                  selectedNeed: _selectedNeed,
-                  onNeedTap: (need) {
-                    setState(() => _selectedNeed = need);
-                    ScaffoldMessenger.of(
-                      context,
-                    ).showSnackBar(SnackBar(content: Text('$need selected')));
-                  },
-                ),
-                const SizedBox(height: 20),
-                _SectionTitle(
-                  title: 'Recommended for you',
-                  trailing: 'See all',
-                  onTap: () => _showFeatureSheet(
-                    'Recommendations',
-                    'Based on your previous trips and current offers.',
-                  ),
-                ),
-                const SizedBox(height: 12),
-                _RecommendedRail(
-                  onCardTap: (title) => _showFeatureSheet(
-                    title,
-                    'Tap continue to view options and book instantly.',
-                  ),
-                ),
-                const SizedBox(height: 20),
-                _SectionTitle(
-                  title: 'Your trip tools',
-                  trailing: 'Manage',
-                  onTap: () => _showFeatureSheet(
-                    'Trip tools',
-                    'Shortcuts for safety, split fare, and saved places.',
-                  ),
-                ),
-                const SizedBox(height: 12),
-                _TripToolsGrid(
-                  onToolTap: (title) => _showFeatureSheet(
-                    title,
-                    'Open this tool to continue setup.',
-                  ),
-                ),
-                const SizedBox(height: 20),
-                _SectionTitle(
-                  title: 'Offers near you',
-                  trailing: 'View deals',
-                  onTap: () => _showFeatureSheet(
-                    'Nearby offers',
-                    'Limited discounts active around your current location.',
-                  ),
-                ),
-                const SizedBox(height: 12),
-                _OfferList(
-                  onOfferTap: (title) => _showFeatureSheet(
-                    title,
-                    'Apply this offer on your next booking.',
-                  ),
                 ),
               ],
             );
@@ -1089,181 +1092,129 @@ class _RiderHomeTabState extends State<RiderHomeTab> {
 }
 
 class _HeaderSection extends StatelessWidget {
-  const _HeaderSection({required this.onAvatarTap});
+  const _HeaderSection({
+    required this.pickupLocation,
+    required this.dropOffLocation,
+    required this.onPickupTap,
+    required this.onDropOffTap,
+    required this.onAvatarTap,
+  });
 
+  final String pickupLocation;
+  final String dropOffLocation;
+  final VoidCallback onPickupTap;
+  final VoidCallback onDropOffTap;
   final VoidCallback onAvatarTap;
 
   @override
   Widget build(BuildContext context) {
     final double screenWidth = MediaQuery.sizeOf(context).width;
-    final double avatarRadius = (screenWidth * 0.045).clamp(16.0, 24.0);
-    final double avatarIconSize = (avatarRadius * 0.9).clamp(15.0, 22.0);
+    final double avatarRadius = (screenWidth * 0.05).clamp(18.0, 25.0);
+    final double avatarIconSize = (avatarRadius * 0.9).clamp(16.0, 22.0);
 
-    return Row(
-      children: [
-        const Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Good evening, Nahid',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-              SizedBox(height: 4),
-              Text(
-                'Ready for your next ride?',
-                style: TextStyle(color: Color(0xFFB0C5CF), fontSize: 14),
-              ),
-            ],
-          ),
-        ),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-          decoration: BoxDecoration(
-            color: const Color(0xFF17323B),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: const Color(0xFF2A4D58)),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x22000000),
-                blurRadius: 8,
-                offset: Offset(0, 4),
-              ),
-            ],
-          ),
-          child: const Row(
-            children: [
-              Icon(
-                Icons.wb_twilight_rounded,
-                color: Color(0xFF7DE4FF),
-                size: 18,
-              ),
-              SizedBox(width: 6),
-              Text(
-                '27 C',
-                style: TextStyle(
-                  color: Color(0xFFE5F9FF),
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(width: 10),
-        Material(
-          color: const Color(0xFF1A3139),
-          borderRadius: BorderRadius.circular(avatarRadius),
-          shadowColor: const Color(0x33000000),
-          elevation: 1.5,
-          child: InkWell(
-            onTap: onAvatarTap,
-            borderRadius: BorderRadius.circular(avatarRadius),
-            child: CircleAvatar(
-              radius: avatarRadius,
-              backgroundColor: Color(0xFF26434D),
-              child: Icon(
-                Icons.person,
-                color: Colors.white,
-                size: avatarIconSize,
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _ModeSwitcher extends StatelessWidget {
-  const _ModeSwitcher({required this.onRideTap, required this.onParcelTap});
-
-  final VoidCallback onRideTap;
-  final VoidCallback onParcelTap;
-
-  @override
-  Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(6),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF101C22),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFF223641)),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: _ModeButton(
-              label: 'Ride',
-              icon: Icons.directions_car_filled_rounded,
-              selected: true,
-              onTap: onRideTap,
-            ),
-          ),
-          const SizedBox(width: 6),
-          Expanded(
-            child: _ModeButton(
-              label: 'Parcel',
-              icon: Icons.inventory_2_rounded,
-              selected: false,
-              onTap: onParcelTap,
-            ),
+        borderRadius: BorderRadius.circular(24),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [_monoSurfaceAlt, _monoSurface, _monoBlack],
+        ),
+        border: Border.all(color: _monoBorderStrong),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x33000000),
+            blurRadius: 18,
+            offset: Offset(0, 10),
           ),
         ],
       ),
-    );
-  }
-}
-
-class _ModeButton extends StatelessWidget {
-  const _ModeButton({
-    required this.label,
-    required this.icon,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String label;
-  final IconData icon;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: selected ? const Color(0xFF2AE0A0) : const Color(0xFF162830),
-      borderRadius: BorderRadius.circular(12),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
             children: [
-              Icon(
-                icon,
-                size: 18,
-                color: selected
-                    ? const Color(0xFF052018)
-                    : const Color(0xFFBBD7E2),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Search location',
+                      style: TextStyle(
+                        color: _monoTextPrimary,
+                        fontSize: 26,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      'Set pickup and destination, then choose bike or car below.',
+                      style: TextStyle(
+                        color: _monoTextSecondary,
+                        fontSize: 14,
+                        height: 1.35,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              const SizedBox(width: 8),
-              Text(
-                label,
-                style: TextStyle(
-                  color: selected
-                      ? const Color(0xFF052018)
-                      : const Color(0xFFBBD7E2),
-                  fontWeight: FontWeight.w700,
+              const SizedBox(width: 12),
+              Material(
+                color: _monoSurfaceRaised,
+                borderRadius: BorderRadius.circular(avatarRadius),
+                shadowColor: const Color(0x33000000),
+                elevation: 1.5,
+                child: InkWell(
+                  onTap: onAvatarTap,
+                  borderRadius: BorderRadius.circular(avatarRadius),
+                  child: CircleAvatar(
+                    radius: avatarRadius,
+                    backgroundColor: _monoSurface,
+                    child: Icon(
+                      Icons.person,
+                      color: _monoTextPrimary,
+                      size: avatarIconSize,
+                    ),
+                  ),
                 ),
               ),
             ],
           ),
-        ),
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: _monoSurface,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: _monoBorder),
+            ),
+            child: Column(
+              children: [
+                _RouteRow(
+                  icon: Icons.search_rounded,
+                  label: 'Destination',
+                  value: dropOffLocation,
+                  accent: _monoAccentSoft,
+                  isPlaceholder:
+                      dropOffLocation == _RiderHomeTabState._locationPrompt,
+                  onTap: onDropOffTap,
+                ),
+                const Padding(
+                  padding: EdgeInsets.only(left: 14),
+                  child: Divider(color: _monoBorder, height: 14),
+                ),
+                _RouteRow(
+                  icon: Icons.my_location_rounded,
+                  label: 'Pickup',
+                  value: pickupLocation,
+                  accent: _monoAccent,
+                  onTap: onPickupTap,
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -1273,14 +1224,18 @@ class _RouteComposerCard extends StatelessWidget {
   const _RouteComposerCard({
     required this.pickupLocation,
     required this.dropOffLocation,
+    required this.pickupPoint,
+    required this.dropOffPoint,
     required this.selectedServiceType,
     required this.selectedPaymentMethod,
     required this.driverSearchMode,
     required this.availableDrivers,
     required this.estimate,
+    required this.bikeEstimate,
+    required this.carEstimate,
+    required this.bikeDriverCount,
+    required this.carDriverCount,
     required this.canBook,
-    required this.onPickupTap,
-    required this.onDropOffTap,
     required this.onServiceTypeTap,
     required this.onPaymentTap,
     required this.onSettingsTap,
@@ -1290,14 +1245,18 @@ class _RouteComposerCard extends StatelessWidget {
 
   final String pickupLocation;
   final String dropOffLocation;
+  final LatLng pickupPoint;
+  final LatLng? dropOffPoint;
   final String selectedServiceType;
   final PaymentMethodType selectedPaymentMethod;
   final String driverSearchMode;
   final List<_DriverCandidate> availableDrivers;
   final _RideEstimate estimate;
+  final _RideEstimate bikeEstimate;
+  final _RideEstimate carEstimate;
+  final int bikeDriverCount;
+  final int carDriverCount;
   final bool canBook;
-  final VoidCallback onPickupTap;
-  final VoidCallback onDropOffTap;
   final ValueChanged<String> onServiceTypeTap;
   final VoidCallback onPaymentTap;
   final VoidCallback onSettingsTap;
@@ -1313,9 +1272,9 @@ class _RouteComposerCard extends StatelessWidget {
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFF18303A), Color(0xFF11262E), Color(0xFF0D1C22)],
+          colors: [_monoSurfaceAlt, _monoSurface, _monoBlack],
         ),
-        border: Border.all(color: const Color(0xFF35505A)),
+        border: Border.all(color: _monoBorderStrong),
         boxShadow: const [
           BoxShadow(
             color: Color(0x33000000),
@@ -1327,128 +1286,343 @@ class _RouteComposerCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: SizedBox(
+              height: 270,
+              child: Stack(
+                children: [
+                  FlutterMap(
+                    options: MapOptions(
+                      initialCenter: dropOffPoint ?? pickupPoint,
+                      initialZoom: dropOffPoint == null ? 12.8 : 12.2,
+                    ),
+                    children: [
+                      TileLayer(
+                        urlTemplate:
+                            'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                        userAgentPackageName: 'com.example.driver_lagbe',
+                      ),
+                      if (dropOffPoint != null)
+                        PolylineLayer(
+                          polylines: [
+                            Polyline(
+                              points: [pickupPoint, dropOffPoint!],
+                              color: _monoAccent,
+                              strokeWidth: 4,
+                            ),
+                          ],
+                        ),
+                      MarkerLayer(
+                        markers: [
+                          Marker(
+                            point: pickupPoint,
+                            width: 46,
+                            height: 46,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: _monoAccent,
+                                borderRadius: BorderRadius.circular(999),
+                                border: Border.all(
+                                  color: _monoAccentSoft,
+                                  width: 2,
+                                ),
+                              ),
+                              child: const Icon(
+                                Icons.my_location_rounded,
+                                color: _monoAccentText,
+                              ),
+                            ),
+                          ),
+                          if (dropOffPoint != null)
+                            Marker(
+                              point: dropOffPoint!,
+                              width: 48,
+                              height: 48,
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: _monoBlack,
+                                  borderRadius: BorderRadius.circular(999),
+                                  border: Border.all(
+                                    color: _monoAccent,
+                                    width: 2,
+                                  ),
+                                ),
+                                child: const Icon(
+                                  Icons.location_on_rounded,
+                                  color: _monoAccent,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  Positioned(
+                    top: 12,
+                    left: 12,
+                    child: _MapStatusPill(
+                      icon: Icons.tune_rounded,
+                      label: '$driverSearchMode range',
+                    ),
+                  ),
+                  Positioned(
+                    top: 12,
+                    right: 12,
+                    child: _MapStatusPill(
+                      icon: selectedServiceType == 'Bike'
+                          ? Icons.two_wheeler_rounded
+                          : Icons.directions_car_filled_rounded,
+                      label: selectedServiceType,
+                    ),
+                  ),
+                  Positioned(
+                    left: 12,
+                    right: 12,
+                    bottom: 12,
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: _monoOverlay,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: _monoBorder),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            dropOffPoint == null
+                                ? 'Choose your destination to preview the route.'
+                                : '$pickupLocation -> $dropOffLocation',
+                            style: const TextStyle(
+                              color: _monoTextPrimary,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Live estimate: BDT ${estimate.priceBdt} • ${estimate.timeLabel}',
+                            style: const TextStyle(
+                              color: _monoTextSecondary,
+                              fontSize: 12.5,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
           Row(
             children: [
               const Expanded(
                 child: Text(
-                  'Driver Request',
+                  'Choose your ride',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: _monoTextPrimary,
                     fontSize: 20,
                     fontWeight: FontWeight.w800,
                   ),
                 ),
               ),
-              Material(
-                color: const Color(0xFF213942),
-                borderRadius: BorderRadius.circular(16),
-                child: InkWell(
-                  onTap: onSettingsTap,
-                  borderRadius: BorderRadius.circular(16),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 8,
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(
-                          Icons.tune_rounded,
-                          color: Color(0xFFA3D1DE),
-                          size: 18,
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          '$driverSearchMode drivers',
-                          style: const TextStyle(
-                            color: Color(0xFFD8EEF5),
-                            fontWeight: FontWeight.w700,
-                            fontSize: 12.5,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+              TextButton.icon(
+                onPressed: onSettingsTap,
+                icon: const Icon(Icons.filter_alt_outlined, size: 18),
+                label: const Text('Driver range'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _VehicleOptionCard(
+                  label: 'Bike',
+                  subtitle: 'Fast city pickup',
+                  icon: Icons.two_wheeler_rounded,
+                  estimate: bikeEstimate,
+                  drivers: bikeDriverCount,
+                  selected: selectedServiceType == 'Bike',
+                  accentColor: _monoAccent,
+                  onTap: () => onServiceTypeTap('Bike'),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _VehicleOptionCard(
+                  label: 'Car',
+                  subtitle: 'Comfort ride',
+                  icon: Icons.directions_car_filled_rounded,
+                  estimate: carEstimate,
+                  drivers: carDriverCount,
+                  selected: selectedServiceType == 'Car',
+                  accentColor: _monoAccentSoft,
+                  onTap: () => onServiceTypeTap('Car'),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 10),
-          _RouteRow(
-            icon: Icons.my_location_rounded,
-            label: 'Pickup',
-            value: pickupLocation,
-            accent: const Color(0xFF2AE0A0),
-            onTap: onPickupTap,
-          ),
-          const Padding(
-            padding: EdgeInsets.only(left: 12),
-            child: Divider(color: Color(0xFF2C444E)),
-          ),
-          _RouteRow(
-            icon: Icons.location_on_outlined,
-            label: 'Drop-off',
-            value: dropOffLocation,
-            accent: const Color(0xFF7DE4FF),
-            isPlaceholder:
-                dropOffLocation == _RiderHomeTabState._locationPrompt,
-            onTap: onDropOffTap,
-          ),
-          const SizedBox(height: 12),
-          const Text(
-            'Service type',
-            style: TextStyle(
-              color: Color(0xFFA7C1CC),
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: ['Hourly', 'Day', 'Trip'].map((service) {
-              return _ServiceTypeChip(
-                label: service,
-                selected: selectedServiceType == service,
-                onTap: () => onServiceTypeTap(service),
-              );
-            }).toList(),
-          ),
-          const SizedBox(height: 10),
           Material(
-            color: const Color(0xFF18303A),
-            borderRadius: BorderRadius.circular(12),
+            color: Colors.transparent,
+            borderRadius: BorderRadius.circular(18),
             child: InkWell(
               onTap: onPaymentTap,
-              borderRadius: BorderRadius.circular(12),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 10,
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      selectedPaymentMethod.icon,
-                      color: const Color(0xFF8FE6FF),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        'Payment: ${selectedPaymentMethod.label}',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                    const Icon(
-                      Icons.chevron_right_rounded,
-                      color: Color(0xFF8DA8B4),
+              borderRadius: BorderRadius.circular(18),
+              child: Ink(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(18),
+                  color: _monoAccent,
+                  border: Border.all(color: const Color(0xFFD8D8D8)),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0x33000000),
+                      blurRadius: 18,
+                      offset: Offset(0, 10),
                     ),
                   ],
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 12,
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 52,
+                        height: 52,
+                        decoration: BoxDecoration(
+                          color: _monoBlack,
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Icon(
+                          selectedPaymentMethod.icon,
+                          color: _monoAccent,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                const Text(
+                                  'Payment method',
+                                  style: TextStyle(
+                                    color: Color(0xFF4F4F4F),
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: selectedPaymentMethod.isDigital
+                                        ? _monoBlack
+                                        : const Color(0xFFE7E7E7),
+                                    borderRadius: BorderRadius.circular(999),
+                                  ),
+                                  child: Text(
+                                    selectedPaymentMethod.isDigital
+                                        ? 'Fast checkout'
+                                        : 'Pay on ride',
+                                    style: TextStyle(
+                                      color: selectedPaymentMethod.isDigital
+                                          ? _monoAccent
+                                          : _monoBlack,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 5),
+                            Text(
+                              selectedPaymentMethod.label,
+                              style: const TextStyle(
+                                color: _monoBlack,
+                                fontSize: 20,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              selectedPaymentMethod.isDigital
+                                  ? 'Secure payment selected for a smoother pickup.'
+                                  : 'Switch to digital wallet or card for quicker checkout.',
+                              style: const TextStyle(
+                                color: Color(0xFF5A5A5A),
+                                fontSize: 12.5,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF2F2F2),
+                                borderRadius: BorderRadius.circular(999),
+                                border: Border.all(
+                                  color: const Color(0xFFE1E1E1),
+                                ),
+                              ),
+                              child: Text(
+                                selectedPaymentMethod.isDigital
+                                    ? 'Recommended for faster driver dispatch'
+                                    : 'Tip: digital payment speeds up pickup handoff',
+                                style: const TextStyle(
+                                  color: _monoBlack,
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 10,
+                        ),
+                        decoration: BoxDecoration(
+                          color: _monoBlack,
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              'Change',
+                              style: TextStyle(
+                                color: _monoAccent,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                            SizedBox(width: 4),
+                            Icon(
+                              Icons.chevron_right_rounded,
+                              color: _monoAccent,
+                              size: 18,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -1457,17 +1631,19 @@ class _RouteComposerCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: const Color(0xFF1A313A),
+              color: _monoSurfaceAlt,
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: const Color(0xFF2E4B56)),
+              border: Border.all(color: _monoBorder),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '${availableDrivers.length} drivers found (${driverSearchMode.toLowerCase()} range)',
+                  availableDrivers.isEmpty
+                      ? 'No $selectedServiceType drivers available in the ${driverSearchMode.toLowerCase()} range.'
+                      : '${availableDrivers.first.name} can reach you in ${availableDrivers.first.etaMin} min.',
                   style: const TextStyle(
-                    color: Color(0xFFD5ECF4),
+                    color: _monoTextPrimary,
                     fontWeight: FontWeight.w700,
                     fontSize: 13,
                   ),
@@ -1475,8 +1651,8 @@ class _RouteComposerCard extends StatelessWidget {
                 const SizedBox(height: 8),
                 if (availableDrivers.isEmpty)
                   const Text(
-                    'No drivers available in this range now. Try switching search settings.',
-                    style: TextStyle(color: Color(0xFFAAC0CB), fontSize: 13),
+                    'Try another destination or expand the search range.',
+                    style: TextStyle(color: _monoTextSecondary, fontSize: 13),
                   )
                 else
                   ...availableDrivers.take(2).map((driver) {
@@ -1497,10 +1673,10 @@ class _RouteComposerCard extends StatelessWidget {
                 child: FilledButton.icon(
                   onPressed: canBook ? onInstantBookTap : null,
                   style: FilledButton.styleFrom(
-                    backgroundColor: const Color(0xFF2AE0A0),
-                    foregroundColor: const Color(0xFF062219),
-                    disabledBackgroundColor: const Color(0xFF325246),
-                    disabledForegroundColor: const Color(0xFF95B3A5),
+                    backgroundColor: _monoAccent,
+                    foregroundColor: _monoAccentText,
+                    disabledBackgroundColor: _monoSurfaceRaised,
+                    disabledForegroundColor: _monoTextMuted,
                   ),
                   icon: const Icon(Icons.flash_on_rounded),
                   label: const Text('Book now'),
@@ -1511,8 +1687,8 @@ class _RouteComposerCard extends StatelessWidget {
                 child: OutlinedButton.icon(
                   onPressed: canBook ? onScheduleTap : null,
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: const Color(0xFFD8EEF5),
-                    side: const BorderSide(color: Color(0xFF3A5963)),
+                    foregroundColor: _monoTextPrimary,
+                    side: const BorderSide(color: _monoBorderStrong),
                   ),
                   icon: const Icon(Icons.schedule_rounded),
                   label: const Text('Schedule'),
@@ -1523,11 +1699,129 @@ class _RouteComposerCard extends StatelessWidget {
           if (!canBook) ...[
             const SizedBox(height: 8),
             const Text(
-              'Choose a drop-off to enable booking actions.',
-              style: TextStyle(color: Color(0xFFAAC0CB), fontSize: 12.5),
+              'Choose a destination above to unlock the route preview and booking buttons.',
+              style: TextStyle(color: _monoTextSecondary, fontSize: 12.5),
             ),
           ],
         ],
+      ),
+    );
+  }
+}
+
+class _MapStatusPill extends StatelessWidget {
+  const _MapStatusPill({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: _monoOverlay,
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: _monoBorderStrong),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16, color: _monoAccentSoft),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: const TextStyle(
+              color: _monoTextPrimary,
+              fontWeight: FontWeight.w700,
+              fontSize: 12.5,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _VehicleOptionCard extends StatelessWidget {
+  const _VehicleOptionCard({
+    required this.label,
+    required this.subtitle,
+    required this.icon,
+    required this.estimate,
+    required this.drivers,
+    required this.selected,
+    required this.accentColor,
+    required this.onTap,
+  });
+
+  final String label;
+  final String subtitle;
+  final IconData icon;
+  final _RideEstimate estimate;
+  final int drivers;
+  final bool selected;
+  final Color accentColor;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: selected
+          ? accentColor.withValues(alpha: 0.18)
+          : _monoSurface,
+      borderRadius: BorderRadius.circular(18),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(18),
+        child: Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(
+              color: selected ? accentColor : _monoBorderStrong,
+              width: selected ? 1.4 : 1,
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(icon, color: selected ? accentColor : _monoTextSecondary),
+              const SizedBox(height: 12),
+              Text(
+                label,
+                style: const TextStyle(
+                  color: _monoTextPrimary,
+                  fontSize: 17,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              Text(
+                subtitle,
+                style: const TextStyle(
+                  color: _monoTextSecondary,
+                  fontSize: 12.5,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                'BDT ${estimate.priceBdt}',
+                style: TextStyle(
+                  color: selected ? accentColor : _monoTextPrimary,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                '${estimate.timeLabel} • $drivers drivers',
+                style: const TextStyle(
+                  color: _monoTextMuted,
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -1571,7 +1865,7 @@ class _RouteRow extends StatelessWidget {
                     Text(
                       label,
                       style: const TextStyle(
-                        color: Color(0xFF9BB2BD),
+                        color: _monoTextMuted,
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                       ),
@@ -1580,8 +1874,8 @@ class _RouteRow extends StatelessWidget {
                       value,
                       style: TextStyle(
                         color: isPlaceholder
-                            ? const Color(0xFFA9C0CA)
-                            : Colors.white,
+                            ? _monoTextSecondary
+                            : _monoTextPrimary,
                         fontSize: 17,
                         fontWeight: FontWeight.w700,
                       ),
@@ -1589,44 +1883,8 @@ class _RouteRow extends StatelessWidget {
                   ],
                 ),
               ),
-              const Icon(Icons.chevron_right_rounded, color: Color(0xFF8DA8B4)),
+              const Icon(Icons.chevron_right_rounded, color: _monoTextMuted),
             ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _ServiceTypeChip extends StatelessWidget {
-  const _ServiceTypeChip({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: selected ? const Color(0xFF2AE0A0) : const Color(0xFF1B3139),
-      borderRadius: BorderRadius.circular(20),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          child: Text(
-            label,
-            style: TextStyle(
-              color: selected
-                  ? const Color(0xFF062219)
-                  : const Color(0xFFD5ECF4),
-              fontWeight: FontWeight.w700,
-            ),
           ),
         ),
       ),
@@ -1645,11 +1903,11 @@ class _DriverCandidateTile extends StatelessWidget {
       children: [
         CircleAvatar(
           radius: 12,
-          backgroundColor: const Color(0xFF244650),
+          backgroundColor: _monoSurfaceRaised,
           child: Text(
             driver.name.substring(0, 1),
             style: const TextStyle(
-              color: Color(0xFFDFF5FE),
+              color: _monoTextPrimary,
               fontWeight: FontWeight.w800,
             ),
           ),
@@ -1659,7 +1917,7 @@ class _DriverCandidateTile extends StatelessWidget {
           child: Text(
             '${driver.name} - ${driver.vehicle}',
             style: const TextStyle(
-              color: Color(0xFFD7EDF5),
+              color: _monoTextPrimary,
               fontWeight: FontWeight.w600,
               fontSize: 13,
             ),
@@ -1667,7 +1925,7 @@ class _DriverCandidateTile extends StatelessWidget {
         ),
         Text(
           '${driver.etaMin} min',
-          style: const TextStyle(color: Color(0xFFA7C1CC), fontSize: 12.5),
+          style: const TextStyle(color: _monoTextSecondary, fontSize: 12.5),
         ),
       ],
     );
@@ -1686,15 +1944,11 @@ class _EstimatePanel extends StatelessWidget {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(14),
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF245C86), Color(0xFF204D67)],
-        ),
+        color: _monoAccent,
       ),
       child: Row(
         children: [
-          const Icon(Icons.analytics_outlined, color: Colors.white),
+          const Icon(Icons.analytics_outlined, color: _monoAccentText),
           const SizedBox(width: 10),
           Expanded(
             child: Column(
@@ -1703,7 +1957,7 @@ class _EstimatePanel extends StatelessWidget {
                 Text(
                   'Est. BDT ${estimate.priceBdt}',
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: _monoAccentText,
                     fontSize: 17,
                     fontWeight: FontWeight.w800,
                   ),
@@ -1711,7 +1965,7 @@ class _EstimatePanel extends StatelessWidget {
                 Text(
                   '${estimate.timeLabel}  |  ${estimate.distanceLabel}',
                   style: const TextStyle(
-                    color: Color(0xFFE3F2FF),
+                    color: Color(0xFF444444),
                     fontSize: 12.5,
                   ),
                 ),
@@ -1727,6 +1981,8 @@ class _EstimatePanel extends StatelessWidget {
 class _BookingManagementSection extends StatelessWidget {
   const _BookingManagementSection({
     required this.bookings,
+    required this.isExpanded,
+    required this.onToggleExpanded,
     required this.onCancelTap,
     required this.onModifyTap,
     required this.onPaymentTap,
@@ -1736,6 +1992,8 @@ class _BookingManagementSection extends StatelessWidget {
   });
 
   final List<BookingRequest> bookings;
+  final bool isExpanded;
+  final VoidCallback onToggleExpanded;
   final ValueChanged<BookingRequest> onCancelTap;
   final ValueChanged<BookingRequest> onModifyTap;
   final ValueChanged<BookingRequest> onPaymentTap;
@@ -1745,62 +2003,98 @@ class _BookingManagementSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (bookings.isEmpty) {
-      return Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: const Color(0xFF13242B),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFF26424D)),
-        ),
-        child: const Row(
-          children: [
-            Icon(Icons.calendar_month_outlined, color: Color(0xFF8FE6FF)),
-            SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                'No active bookings yet. Use Book now or Schedule to create one.',
-                style: TextStyle(color: Color(0xFFB7CAD3), fontSize: 13.5),
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: _monoSurface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: _monoBorder),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          InkWell(
+            onTap: onToggleExpanded,
+            borderRadius: BorderRadius.circular(14),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 2),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: _monoSurfaceRaised,
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: const Icon(
+                      Icons.calendar_month_outlined,
+                      color: _monoAccentSoft,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Booking management',
+                          style: TextStyle(
+                            color: _monoTextPrimary,
+                            fontSize: 20,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          bookings.isEmpty
+                              ? 'No queued rides yet. Scheduled and requested trips will appear here.'
+                              : '${bookings.length} booking${bookings.length > 1 ? 's' : ''} ready to manage.',
+                          style: const TextStyle(
+                            color: _monoTextSecondary,
+                            fontSize: 13.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Icon(
+                    isExpanded
+                        ? Icons.keyboard_arrow_up_rounded
+                        : Icons.keyboard_arrow_down_rounded,
+                    color: _monoTextSecondary,
+                    size: 28,
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
-      );
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Booking management',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 22,
-            fontWeight: FontWeight.w800,
           ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          '${bookings.length} active booking${bookings.length > 1 ? 's' : ''}',
-          style: const TextStyle(color: Color(0xFFAAC0CB), fontSize: 13.5),
-        ),
-        const SizedBox(height: 10),
-        ...bookings.take(3).map((booking) {
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 10),
-            child: _BookingCard(
-              booking: booking,
-              onCancelTap: () => onCancelTap(booking),
-              onModifyTap: () => onModifyTap(booking),
-              onPaymentTap: () => onPaymentTap(booking),
-              onInvoiceTap: () => onInvoiceTap(booking),
-              onStartTap: () => onStartTap(booking),
-              onCompleteTap: () => onCompleteTap(booking),
-            ),
-          );
-        }),
-      ],
+          if (isExpanded) ...[
+            const SizedBox(height: 14),
+            if (bookings.isEmpty)
+              const Text(
+                'Use Book now or Schedule after selecting a drop-off to start managing rides from here.',
+                style: TextStyle(color: _monoTextSecondary, fontSize: 13.5),
+              )
+            else
+              ...bookings.take(3).map((booking) {
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: _BookingCard(
+                    booking: booking,
+                    onCancelTap: () => onCancelTap(booking),
+                    onModifyTap: () => onModifyTap(booking),
+                    onPaymentTap: () => onPaymentTap(booking),
+                    onInvoiceTap: () => onInvoiceTap(booking),
+                    onStartTap: () => onStartTap(booking),
+                    onCompleteTap: () => onCompleteTap(booking),
+                  ),
+                );
+              }),
+          ],
+        ],
+      ),
     );
   }
 }
@@ -1829,9 +2123,9 @@ class _BookingCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: const Color(0xFF13242B),
+        color: _monoSurface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFF26424D)),
+        border: Border.all(color: _monoBorder),
         boxShadow: const [
           BoxShadow(
             color: Color(0x22000000),
@@ -1849,7 +2143,7 @@ class _BookingCard extends StatelessWidget {
                 child: Text(
                   '#${booking.id} - ${booking.serviceType}',
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: _monoTextPrimary,
                     fontSize: 16,
                     fontWeight: FontWeight.w800,
                   ),
@@ -1864,7 +2158,7 @@ class _BookingCard extends StatelessWidget {
                 child: Text(
                   booking.status.label,
                   style: const TextStyle(
-                    color: Color(0xFFDFF8FF),
+                    color: _monoAccentText,
                     fontSize: 11.5,
                     fontWeight: FontWeight.w700,
                   ),
@@ -1876,33 +2170,33 @@ class _BookingCard extends StatelessWidget {
           Text(
             '${booking.pickupLocation} -> ${booking.dropOffLocation}',
             style: const TextStyle(
-              color: Color(0xFFD7EDF5),
+              color: _monoTextPrimary,
               fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: 3),
           Text(
             '${formatBookingDateTime(booking.bookedFor)} | Est. BDT ${booking.estimatedPriceBdt}',
-            style: const TextStyle(color: Color(0xFFAAC0CB), fontSize: 12.5),
+            style: const TextStyle(color: _monoTextSecondary, fontSize: 12.5),
           ),
           const SizedBox(height: 2),
           Text(
             'Driver range: ${booking.driverSearchMode}${booking.assignedDriver == null ? '' : ' | Driver: ${booking.assignedDriver}'}',
-            style: const TextStyle(color: Color(0xFFAAC0CB), fontSize: 12.5),
+            style: const TextStyle(color: _monoTextSecondary, fontSize: 12.5),
           ),
           const SizedBox(height: 6),
           Row(
             children: [
               Icon(
                 booking.paymentMethod.icon,
-                color: const Color(0xFF8FE6FF),
+                color: _monoAccentSoft,
                 size: 18,
               ),
               const SizedBox(width: 8),
               Text(
                 'Payment: ${booking.paymentMethod.label}',
                 style: const TextStyle(
-                  color: Color(0xFFD0E8F1),
+                  color: _monoTextPrimary,
                   fontSize: 12.5,
                   fontWeight: FontWeight.w700,
                 ),
@@ -1923,8 +2217,8 @@ class _BookingCard extends StatelessWidget {
                       ? null
                       : onCancelTap,
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: const Color(0xFFFFCFDA),
-                    side: const BorderSide(color: Color(0xFF7F4455)),
+                    foregroundColor: _monoTextPrimary,
+                    side: const BorderSide(color: _monoBorderStrong),
                   ),
                   child: const Text('Cancel'),
                 ),
@@ -1934,8 +2228,8 @@ class _BookingCard extends StatelessWidget {
                 child: FilledButton(
                   onPressed: onModifyTap,
                   style: FilledButton.styleFrom(
-                    backgroundColor: const Color(0xFF2A4E5C),
-                    foregroundColor: const Color(0xFFE2F5FB),
+                    backgroundColor: _monoSurfaceRaised,
+                    foregroundColor: _monoTextPrimary,
                   ),
                   child: const Text('Modify'),
                 ),
@@ -1953,11 +2247,11 @@ class _BookingCard extends StatelessWidget {
                     : onCompleteTap,
                 style: FilledButton.styleFrom(
                   backgroundColor: booking.status == BookingStatus.requested
-                      ? const Color(0xFF2A5C7D)
-                      : const Color(0xFF2AE0A0),
+                      ? _monoSurfaceRaised
+                      : _monoAccent,
                   foregroundColor: booking.status == BookingStatus.requested
-                      ? const Color(0xFFDFF4FF)
-                      : const Color(0xFF0A1814),
+                      ? _monoTextPrimary
+                      : _monoAccentText,
                 ),
                 child: Text(
                   booking.status == BookingStatus.requested
@@ -1975,13 +2269,13 @@ class _BookingCard extends StatelessWidget {
   Color _statusColor(BookingStatus status) {
     switch (status) {
       case BookingStatus.requested:
-        return const Color(0xFF1B4D5F);
+        return const Color(0xFFE0E0E0);
       case BookingStatus.ongoing:
-        return const Color(0xFF2A5C7D);
+        return const Color(0xFFFFFFFF);
       case BookingStatus.completed:
-        return const Color(0xFF1E5F4F);
+        return const Color(0xFFBDBDBD);
       case BookingStatus.cancelled:
-        return const Color(0xFF6A3242);
+        return const Color(0xFF5E5E5E);
     }
   }
 }
@@ -2005,20 +2299,20 @@ class _BookingEditDropdown extends StatelessWidget {
       initialValue: value,
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: const TextStyle(color: Color(0xFFAAC0CB)),
+        labelStyle: const TextStyle(color: _monoTextSecondary),
         filled: true,
-        fillColor: const Color(0xFF18303A),
+        fillColor: _monoSurfaceAlt,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF2D4A55)),
+          borderSide: const BorderSide(color: _monoBorderStrong),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF2D4A55)),
+          borderSide: const BorderSide(color: _monoBorderStrong),
         ),
       ),
-      dropdownColor: const Color(0xFF17303A),
-      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+      dropdownColor: _monoSurfaceAlt,
+      style: const TextStyle(color: _monoTextPrimary, fontWeight: FontWeight.w700),
       items: items.map((item) {
         return DropdownMenuItem<String>(value: item, child: Text(item));
       }).toList(),
@@ -2057,375 +2351,4 @@ class _DriverCandidate {
   final double distanceKm;
   final int etaMin;
   final double rating;
-}
-
-class _SectionTitle extends StatelessWidget {
-  const _SectionTitle({
-    required this.title,
-    required this.trailing,
-    required this.onTap,
-  });
-
-  final String title;
-  final String trailing;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: Text(
-            title,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 22,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-        ),
-        TextButton(
-          onPressed: onTap,
-          child: Text(
-            trailing,
-            style: const TextStyle(
-              color: Color(0xFF8FE6FF),
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.2,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _NeedPillsSection extends StatelessWidget {
-  const _NeedPillsSection({
-    required this.selectedNeed,
-    required this.onNeedTap,
-  });
-
-  final String selectedNeed;
-  final ValueChanged<String> onNeedTap;
-
-  @override
-  Widget build(BuildContext context) {
-    const options = <String>[
-      'Daily commute',
-      'Airport drop',
-      'Parcel send',
-      'Intercity',
-    ];
-
-    return Wrap(
-      spacing: 10,
-      runSpacing: 10,
-      children: options.map((option) {
-        final selected = option == selectedNeed;
-        return Material(
-          color: selected ? const Color(0xFF2AE0A0) : const Color(0xFF15272F),
-          borderRadius: BorderRadius.circular(24),
-          child: InkWell(
-            onTap: () => onNeedTap(option),
-            borderRadius: BorderRadius.circular(24),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              child: Text(
-                option,
-                style: TextStyle(
-                  color: selected
-                      ? const Color(0xFF062219)
-                      : const Color(0xFFCAE2EB),
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-          ),
-        );
-      }).toList(),
-    );
-  }
-}
-
-class _RecommendedRail extends StatelessWidget {
-  const _RecommendedRail({required this.onCardTap});
-
-  final ValueChanged<String> onCardTap;
-
-  @override
-  Widget build(BuildContext context) {
-    const items = <_RecommendedItem>[
-      _RecommendedItem(
-        title: 'Morning Saver',
-        subtitle: 'Up to 18% off before 10 AM',
-        icon: Icons.wb_sunny_outlined,
-        colors: [Color(0xFF2F7EFF), Color(0xFF2556A9)],
-      ),
-      _RecommendedItem(
-        title: 'Comfort+',
-        subtitle: 'Quiet rides with top drivers',
-        icon: Icons.weekend_outlined,
-        colors: [Color(0xFF7046C9), Color(0xFF452B83)],
-      ),
-      _RecommendedItem(
-        title: 'City Bike',
-        subtitle: 'Fast pickup in traffic',
-        icon: Icons.two_wheeler_rounded,
-        colors: [Color(0xFF00A978), Color(0xFF0C6A50)],
-      ),
-    ];
-
-    return SizedBox(
-      height: 168,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: items.length,
-        separatorBuilder: (_, _) => const SizedBox(width: 12),
-        itemBuilder: (context, index) {
-          final item = items[index];
-          return Material(
-            color: Colors.transparent,
-            borderRadius: BorderRadius.circular(18),
-            child: InkWell(
-              onTap: () => onCardTap(item.title),
-              borderRadius: BorderRadius.circular(18),
-              child: Container(
-                width: 230,
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(18),
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: item.colors,
-                  ),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Color(0x33000000),
-                      blurRadius: 10,
-                      offset: Offset(0, 6),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Icon(item.icon, color: Colors.white, size: 30),
-                    const Spacer(),
-                    Text(
-                      item.title,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 21,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    Text(
-                      item.subtitle,
-                      style: const TextStyle(
-                        color: Color(0xFFE7F2FF),
-                        fontSize: 13.5,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-}
-
-class _RecommendedItem {
-  const _RecommendedItem({
-    required this.title,
-    required this.subtitle,
-    required this.icon,
-    required this.colors,
-  });
-
-  final String title;
-  final String subtitle;
-  final IconData icon;
-  final List<Color> colors;
-}
-
-class _TripToolsGrid extends StatelessWidget {
-  const _TripToolsGrid({required this.onToolTap});
-
-  final ValueChanged<String> onToolTap;
-
-  @override
-  Widget build(BuildContext context) {
-    const items = <_ToolItem>[
-      _ToolItem(
-        title: 'Saved places',
-        subtitle: 'Home, work, and more',
-        icon: Icons.bookmark_outline_rounded,
-      ),
-      _ToolItem(
-        title: 'Safety toolkit',
-        subtitle: 'Share trip & SOS',
-        icon: Icons.shield_outlined,
-      ),
-      _ToolItem(
-        title: 'Split fare',
-        subtitle: 'Invite your friends',
-        icon: Icons.group_add_outlined,
-      ),
-      _ToolItem(
-        title: 'Ride pass',
-        subtitle: 'Weekly savings',
-        icon: Icons.confirmation_number_outlined,
-      ),
-    ];
-
-    return Wrap(
-      spacing: 12,
-      runSpacing: 12,
-      children: items.map((item) {
-        return SizedBox(
-          width: (MediaQuery.of(context).size.width - 44) / 2,
-          child: Material(
-            color: const Color(0xFF122229),
-            borderRadius: BorderRadius.circular(16),
-            shadowColor: const Color(0x33000000),
-            elevation: 1.5,
-            child: InkWell(
-              onTap: () => onToolTap(item.title),
-              borderRadius: BorderRadius.circular(16),
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Icon(item.icon, color: const Color(0xFF8FE6FF), size: 24),
-                    const SizedBox(height: 10),
-                    Text(
-                      item.title,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    Text(
-                      item.subtitle,
-                      style: const TextStyle(
-                        color: Color(0xFFB7CAD3),
-                        fontSize: 13,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        );
-      }).toList(),
-    );
-  }
-}
-
-class _ToolItem {
-  const _ToolItem({
-    required this.title,
-    required this.subtitle,
-    required this.icon,
-  });
-
-  final String title;
-  final String subtitle;
-  final IconData icon;
-}
-
-class _OfferList extends StatelessWidget {
-  const _OfferList({required this.onOfferTap});
-
-  final ValueChanged<String> onOfferTap;
-
-  @override
-  Widget build(BuildContext context) {
-    const offers = <_OfferItem>[
-      _OfferItem(
-        title: '25% off Bike rides',
-        subtitle: 'Valid till tonight, max BDT 60',
-        color: Color(0xFF1B5E52),
-      ),
-      _OfferItem(
-        title: 'Flat BDT 100 off Intercity',
-        subtitle: 'Use code TRAVEL100',
-        color: Color(0xFF5D3A16),
-      ),
-    ];
-
-    return Column(
-      children: offers.map((offer) {
-        return Container(
-          margin: const EdgeInsets.only(bottom: 10),
-          child: Material(
-            color: offer.color,
-            borderRadius: BorderRadius.circular(16),
-            shadowColor: const Color(0x33000000),
-            elevation: 1.5,
-            child: InkWell(
-              onTap: () => onOfferTap(offer.title),
-              borderRadius: BorderRadius.circular(16),
-              child: Padding(
-                padding: const EdgeInsets.all(14),
-                child: Row(
-                  children: [
-                    const Icon(Icons.local_offer_rounded, color: Colors.white),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            offer.title,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 17,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                          Text(
-                            offer.subtitle,
-                            style: const TextStyle(
-                              color: Color(0xFFE8F2F4),
-                              fontSize: 13.5,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const Icon(
-                      Icons.arrow_forward_ios_rounded,
-                      color: Colors.white70,
-                      size: 16,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        );
-      }).toList(),
-    );
-  }
-}
-
-class _OfferItem {
-  const _OfferItem({
-    required this.title,
-    required this.subtitle,
-    required this.color,
-  });
-
-  final String title;
-  final String subtitle;
-  final Color color;
 }
