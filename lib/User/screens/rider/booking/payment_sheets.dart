@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'booking_models.dart';
+import '../rider_palette.dart';
 
 Future<PaymentMethodType?> showPaymentMethodSheet({
   required BuildContext context,
@@ -10,7 +11,7 @@ Future<PaymentMethodType?> showPaymentMethodSheet({
 
   return showModalBottomSheet<PaymentMethodType>(
     context: context,
-    backgroundColor: const Color(0xFF0F1A1E),
+    backgroundColor: riderBlack,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
     ),
@@ -26,7 +27,7 @@ Future<PaymentMethodType?> showPaymentMethodSheet({
                 const Text(
                   'Select payment method',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: riderTextPrimary,
                     fontSize: 24,
                     fontWeight: FontWeight.w800,
                   ),
@@ -34,7 +35,7 @@ Future<PaymentMethodType?> showPaymentMethodSheet({
                 const SizedBox(height: 8),
                 const Text(
                   'Pay with cash or digital wallet/card.',
-                  style: TextStyle(color: Color(0xFFB2C2CC), fontSize: 14.5),
+                  style: TextStyle(color: riderTextSecondary, fontSize: 14.5),
                 ),
                 const SizedBox(height: 14),
                 ...PaymentMethodType.values.map((method) {
@@ -42,18 +43,16 @@ Future<PaymentMethodType?> showPaymentMethodSheet({
                   return Container(
                     margin: const EdgeInsets.only(bottom: 8),
                     decoration: BoxDecoration(
-                      color: selected
-                          ? const Color(0xFF1F4B4B)
-                          : const Color(0xFF162830),
+                      color: selected ? riderSurfaceRaised : riderSurfaceAlt,
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(
                         color: selected
-                            ? const Color(0xFF2AE0A0)
-                            : const Color(0xFF2B4450),
+                            ? riderAccent
+                            : riderBorder,
                       ),
                       boxShadow: const [
                         BoxShadow(
-                          color: Color(0x22000000),
+                          color: riderShadow,
                           blurRadius: 8,
                           offset: Offset(0, 4),
                         ),
@@ -63,26 +62,26 @@ Future<PaymentMethodType?> showPaymentMethodSheet({
                       onTap: () => setModalState(() => tempSelection = method),
                       leading: Icon(
                         method.icon,
-                        color: const Color(0xFFBEE3F1),
+                        color: riderAccentSoft,
                       ),
                       title: Text(
                         method.label,
                         style: const TextStyle(
-                          color: Colors.white,
+                          color: riderTextPrimary,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
                       subtitle: Text(
                         method.isDigital ? 'Digital payment' : 'Pay by cash',
-                        style: const TextStyle(color: Color(0xFF9EB4BE)),
+                        style: const TextStyle(color: riderTextSecondary),
                       ),
                       trailing: Icon(
                         selected
                             ? Icons.radio_button_checked_rounded
                             : Icons.radio_button_off_rounded,
                         color: selected
-                            ? const Color(0xFF2AE0A0)
-                            : const Color(0xFF7F9AA6),
+                            ? riderAccent
+                            : riderTextMuted,
                       ),
                     ),
                   );
@@ -93,8 +92,8 @@ Future<PaymentMethodType?> showPaymentMethodSheet({
                   child: FilledButton(
                     onPressed: () => Navigator.of(context).pop(tempSelection),
                     style: FilledButton.styleFrom(
-                      backgroundColor: const Color(0xFF2AE0A0),
-                      foregroundColor: const Color(0xFF0A1814),
+                      backgroundColor: riderAccent,
+                      foregroundColor: riderAccentText,
                     ),
                     child: const Text('Apply payment method'),
                   ),
@@ -115,7 +114,7 @@ Future<void> showBookingInvoiceSheet({
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
-    backgroundColor: const Color(0xFF0F1A1E),
+    backgroundColor: riderBlack,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
     ),
@@ -131,7 +130,7 @@ Future<void> showBookingInvoiceSheet({
                 Text(
                   'Invoice #INV-${booking.id}',
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: riderTextPrimary,
                     fontSize: 24,
                     fontWeight: FontWeight.w800,
                   ),
@@ -140,7 +139,7 @@ Future<void> showBookingInvoiceSheet({
                 Text(
                   '${booking.pickupLocation} -> ${booking.dropOffLocation}',
                   style: const TextStyle(
-                    color: Color(0xFFB7CAD3),
+                    color: riderTextSecondary,
                     fontSize: 13.5,
                   ),
                 ),
@@ -161,7 +160,7 @@ Future<void> showBookingInvoiceSheet({
                   amount: -fare.discount,
                   negative: true,
                 ),
-                const Divider(color: Color(0xFF2A434E)),
+                const Divider(color: riderBorder),
                 _InvoiceRow(
                   label: 'Total paid',
                   amount: fare.totalBdt,
@@ -172,13 +171,13 @@ Future<void> showBookingInvoiceSheet({
                   children: [
                     Icon(
                       booking.paymentMethod.icon,
-                      color: const Color(0xFF8FE6FF),
+                      color: riderAccentSoft,
                     ),
                     const SizedBox(width: 8),
                     Text(
                       'Payment: ${booking.paymentMethod.label}',
                       style: const TextStyle(
-                        color: Color(0xFFD4EAF4),
+                        color: riderTextPrimary,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
@@ -190,8 +189,8 @@ Future<void> showBookingInvoiceSheet({
                   child: FilledButton(
                     onPressed: () => Navigator.of(context).pop(),
                     style: FilledButton.styleFrom(
-                      backgroundColor: const Color(0xFF2AE0A0),
-                      foregroundColor: const Color(0xFF0A1814),
+                      backgroundColor: riderAccent,
+                      foregroundColor: riderAccentText,
                     ),
                     child: const Text('Close invoice'),
                   ),
@@ -220,7 +219,7 @@ class _InvoiceRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Color textColor = emphasize ? Colors.white : const Color(0xFFD4EAF4);
+    final Color textColor = emphasize ? riderTextPrimary : riderTextSecondary;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
@@ -238,7 +237,7 @@ class _InvoiceRow extends StatelessWidget {
           Text(
             '${negative ? '-' : ''}BDT ${amount.abs()}',
             style: TextStyle(
-              color: negative ? const Color(0xFF9CF2B8) : textColor,
+              color: negative ? riderTextMuted : textColor,
               fontSize: emphasize ? 16 : 14,
               fontWeight: emphasize ? FontWeight.w800 : FontWeight.w700,
             ),

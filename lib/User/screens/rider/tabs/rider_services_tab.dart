@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../rider_palette.dart';
 
 class RiderServicesTab extends StatefulWidget {
   const RiderServicesTab({super.key});
@@ -8,13 +9,13 @@ class RiderServicesTab extends StatefulWidget {
 }
 
 class _RiderServicesTabState extends State<RiderServicesTab> {
-  String _selectedScope = 'All';
+  String _selectedScope = 'Parcel';
   bool _showPromo = true;
 
   void _showFeatureSheet(String title, String subtitle) {
     showModalBottomSheet<void>(
       context: context,
-      backgroundColor: const Color(0xFF0F1A1E),
+      backgroundColor: riderBlack,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -28,7 +29,7 @@ class _RiderServicesTabState extends State<RiderServicesTab> {
               Text(
                 title,
                 style: const TextStyle(
-                  color: Colors.white,
+                  color: riderTextPrimary,
                   fontSize: 24,
                   fontWeight: FontWeight.w800,
                 ),
@@ -37,7 +38,7 @@ class _RiderServicesTabState extends State<RiderServicesTab> {
               Text(
                 subtitle,
                 style: const TextStyle(
-                  color: Color(0xFFB2C2CC),
+                  color: riderTextSecondary,
                   fontSize: 15,
                 ),
               ),
@@ -47,8 +48,8 @@ class _RiderServicesTabState extends State<RiderServicesTab> {
                 child: FilledButton(
                   onPressed: () => Navigator.of(context).pop(),
                   style: FilledButton.styleFrom(
-                    backgroundColor: const Color(0xFF2AE0A0),
-                    foregroundColor: const Color(0xFF0A1814),
+                    backgroundColor: riderAccent,
+                    foregroundColor: riderAccentText,
                   ),
                   child: const Text('Continue'),
                 ),
@@ -67,7 +68,7 @@ class _RiderServicesTabState extends State<RiderServicesTab> {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFF0A1215), Color(0xFF12232B), Color(0xFF070A0B)],
+          colors: [riderBlack, riderBackground, riderBlack],
           stops: [0.0, 0.45, 1.0],
         ),
       ),
@@ -77,26 +78,19 @@ class _RiderServicesTabState extends State<RiderServicesTab> {
           padding: const EdgeInsets.fromLTRB(16, 10, 16, 22),
           children: [
             const Text(
-              'Services Hub',
+              'Parcel & Rental',
               style: TextStyle(
-                color: Colors.white,
+                color: riderTextPrimary,
                 fontSize: 30,
                 fontWeight: FontWeight.w800,
               ),
             ),
             const SizedBox(height: 4),
             const Text(
-              'Move people, parcels, and plans from one place.',
+              'Send parcels or reserve a driver for hourly and day rentals.',
               style: TextStyle(
-                color: Color(0xFFB0C5CF),
+                color: riderTextSecondary,
                 fontSize: 14,
-              ),
-            ),
-            const SizedBox(height: 14),
-            _ServiceSearchBox(
-              onTap: () => _showFeatureSheet(
-                'Search service',
-                'Search for any ride, delivery, or rental service.',
               ),
             ),
             const SizedBox(height: 14),
@@ -112,23 +106,25 @@ class _RiderServicesTabState extends State<RiderServicesTab> {
             const SizedBox(height: 18),
             const _SectionTitle(title: 'Popular services'),
             const SizedBox(height: 12),
-            _ServiceCardsGrid(onTap: (title) {
+            _ServiceCardsGrid(
+              selectedScope: _selectedScope,
+              onTap: (title) {
               _showFeatureSheet(
                 title,
                 'Open $title and continue with details.',
               );
             }),
             const SizedBox(height: 20),
-            const _SectionTitle(title: 'Service planner'),
+            const _SectionTitle(title: 'Booking planner'),
             const SizedBox(height: 12),
             _PlannerCard(
               onPlanTap: () => _showFeatureSheet(
-                'Plan a multi-stop trip',
-                'Create one route for pickup, errands, and return.',
+                'Plan a parcel pickup',
+                'Set pickup time, recipient details, and drop instructions.',
               ),
               onRouteTap: () => _showFeatureSheet(
-                'Save route',
-                'Store this route for one-tap booking later.',
+                'Reserve a rental slot',
+                'Choose hours, coverage area, and the type of rental you need.',
               ),
             ),
             const SizedBox(height: 20),
@@ -144,8 +140,8 @@ class _RiderServicesTabState extends State<RiderServicesTab> {
               const SizedBox(height: 20),
               _PromoBanner(
                 onTap: () => _showFeatureSheet(
-                  'Bundle Offer',
-                  'Unlock 3 ride coupons and 1 parcel coupon this week.',
+                  'Parcel & Rental Offer',
+                  'Unlock one parcel discount and one rental upgrade this week.',
                 ),
                 onClose: () => setState(() => _showPromo = false),
               ),
@@ -167,59 +163,9 @@ class _SectionTitle extends StatelessWidget {
     return Text(
       title,
       style: const TextStyle(
-        color: Colors.white,
+        color: riderTextPrimary,
         fontSize: 22,
         fontWeight: FontWeight.w800,
-      ),
-    );
-  }
-}
-
-class _ServiceSearchBox extends StatelessWidget {
-  const _ServiceSearchBox({required this.onTap});
-
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      borderRadius: BorderRadius.circular(18),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(18),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        color: const Color(0xFF16303A),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFF2E505C)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x22000000),
-            blurRadius: 12,
-            offset: Offset(0, 6),
-          ),
-        ],
-      ),
-          child: const Row(
-            children: [
-              Icon(Icons.search_rounded, color: Color(0xFFAAD7E5)),
-              SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  'What can we move today?',
-                  style: TextStyle(
-                    color: Color(0xFFD2EAF2),
-                    fontSize: 17,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-              Icon(Icons.tune_rounded, color: Color(0xFFAAD7E5)),
-            ],
-          ),
-        ),
       ),
     );
   }
@@ -236,14 +182,14 @@ class _ScopeChips extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const scopes = ['All', 'Ride', 'Parcel', 'Rental'];
+    const scopes = ['Parcel', 'Rental'];
     return Wrap(
       spacing: 10,
       runSpacing: 10,
       children: scopes.map((scope) {
         final selected = scope == selectedScope;
         return Material(
-          color: selected ? const Color(0xFF2AE0A0) : const Color(0xFF15272F),
+          color: selected ? riderAccent : riderSurfaceAlt,
           borderRadius: BorderRadius.circular(24),
           child: InkWell(
             onTap: () => onTap(scope),
@@ -253,7 +199,7 @@ class _ScopeChips extends StatelessWidget {
               child: Text(
                 scope,
                 style: TextStyle(
-                  color: selected ? const Color(0xFF062219) : const Color(0xFFCAE2EB),
+                  color: selected ? riderAccentText : riderTextPrimary,
                   fontWeight: FontWeight.w700,
                 ),
               ),
@@ -266,43 +212,54 @@ class _ScopeChips extends StatelessWidget {
 }
 
 class _ServiceCardsGrid extends StatelessWidget {
-  const _ServiceCardsGrid({required this.onTap});
+  const _ServiceCardsGrid({
+    required this.selectedScope,
+    required this.onTap,
+  });
 
+  final String selectedScope;
   final ValueChanged<String> onTap;
 
   @override
   Widget build(BuildContext context) {
     const items = <_ServiceItem>[
       _ServiceItem(
-        title: 'City Ride',
-        subtitle: 'Affordable daily trips',
-        icon: Icons.local_taxi_rounded,
-        colors: [Color(0xFF2668D8), Color(0xFF173A79)],
-      ),
-      _ServiceItem(
+        scope: 'Parcel',
         title: 'Parcel Express',
-        subtitle: 'Fast pickup and drop',
+        subtitle: 'Fast document and small package delivery',
         icon: Icons.inventory_2_rounded,
-        colors: [Color(0xFF00A978), Color(0xFF0C6A50)],
+        colors: [riderSurfaceRaised, riderSurfaceAlt],
       ),
       _ServiceItem(
-        title: 'Airport Transfer',
-        subtitle: 'On-time airport rides',
-        icon: Icons.flight_takeoff_rounded,
-        colors: [Color(0xFF7046C9), Color(0xFF452B83)],
+        scope: 'Parcel',
+        title: 'Fragile Parcel',
+        subtitle: 'Extra handling for delicate items',
+        icon: Icons.widgets_outlined,
+        colors: [riderSurfaceRaised, riderSurfaceAlt],
       ),
       _ServiceItem(
+        scope: 'Rental',
         title: 'Hourly Rental',
-        subtitle: 'Keep a driver for hours',
+        subtitle: 'Keep a driver for city errands and meetings',
         icon: Icons.timelapse_rounded,
-        colors: [Color(0xFF945022), Color(0xFF5E3215)],
+        colors: [riderSurfaceRaised, riderSurfaceAlt],
+      ),
+      _ServiceItem(
+        scope: 'Rental',
+        title: 'Day Rental',
+        subtitle: 'Reserve a full-day driver for planned travel',
+        icon: Icons.calendar_today_rounded,
+        colors: [riderSurfaceRaised, riderSurfaceAlt],
       ),
     ];
+    final List<_ServiceItem> filtered = items
+        .where((item) => item.scope == selectedScope)
+        .toList();
 
     return Wrap(
       spacing: 12,
       runSpacing: 12,
-      children: items.map((item) {
+      children: filtered.map((item) {
         return SizedBox(
           width: (MediaQuery.of(context).size.width - 44) / 2,
           child: Material(
@@ -322,7 +279,7 @@ class _ServiceCardsGrid extends StatelessWidget {
                   ),
                   boxShadow: const [
                     BoxShadow(
-                      color: Color(0x33000000),
+                      color: riderShadow,
                       blurRadius: 10,
                       offset: Offset(0, 6),
                     ),
@@ -336,7 +293,7 @@ class _ServiceCardsGrid extends StatelessWidget {
                     Text(
                       item.title,
                       style: const TextStyle(
-                        color: Colors.white,
+                        color: riderTextPrimary,
                         fontSize: 18,
                         fontWeight: FontWeight.w800,
                       ),
@@ -344,7 +301,7 @@ class _ServiceCardsGrid extends StatelessWidget {
                     Text(
                       item.subtitle,
                       style: const TextStyle(
-                        color: Color(0xFFE8F2FF),
+                        color: riderTextSecondary,
                         fontSize: 13,
                       ),
                     ),
@@ -361,12 +318,14 @@ class _ServiceCardsGrid extends StatelessWidget {
 
 class _ServiceItem {
   const _ServiceItem({
+    required this.scope,
     required this.title,
     required this.subtitle,
     required this.icon,
     required this.colors,
   });
 
+  final String scope;
   final String title;
   final String subtitle;
   final IconData icon;
@@ -386,12 +345,12 @@ class _PlannerCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF152830),
+        color: riderSurface,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFF2C4651)),
+        border: Border.all(color: riderBorder),
         boxShadow: const [
           BoxShadow(
-            color: Color(0x22000000),
+            color: riderShadow,
             blurRadius: 12,
             offset: Offset(0, 6),
           ),
@@ -401,30 +360,30 @@ class _PlannerCard extends StatelessWidget {
         children: [
           ListTile(
             onTap: onPlanTap,
-            leading: const Icon(Icons.route_rounded, color: Color(0xFF8FE6FF)),
+            leading: const Icon(Icons.local_shipping_outlined, color: riderAccentSoft),
             title: const Text(
-              'Plan a multi-stop trip',
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+              'Schedule a parcel pickup',
+              style: TextStyle(color: riderTextPrimary, fontWeight: FontWeight.w700),
             ),
             subtitle: const Text(
-              'Work, errands, and return in one booking',
-              style: TextStyle(color: Color(0xFFB8CED7)),
+              'Choose recipient, delivery notes, and pickup window',
+              style: TextStyle(color: riderTextSecondary),
             ),
-            trailing: const Icon(Icons.chevron_right_rounded, color: Color(0xFFB8CED7)),
+            trailing: const Icon(Icons.chevron_right_rounded, color: riderTextSecondary),
           ),
-          const Divider(height: 1, color: Color(0xFF2C4651)),
+          const Divider(height: 1, color: riderBorder),
           ListTile(
             onTap: onRouteTap,
-            leading: const Icon(Icons.bookmark_add_outlined, color: Color(0xFF8FE6FF)),
+            leading: const Icon(Icons.car_rental_rounded, color: riderAccentSoft),
             title: const Text(
-              'Save this route',
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+              'Reserve a rental slot',
+              style: TextStyle(color: riderTextPrimary, fontWeight: FontWeight.w700),
             ),
             subtitle: const Text(
-              'Reuse your favorite route anytime',
-              style: TextStyle(color: Color(0xFFB8CED7)),
+              'Book hourly or full-day coverage in advance',
+              style: TextStyle(color: riderTextSecondary),
             ),
-            trailing: const Icon(Icons.chevron_right_rounded, color: Color(0xFFB8CED7)),
+            trailing: const Icon(Icons.chevron_right_rounded, color: riderTextSecondary),
           ),
         ],
       ),
@@ -440,10 +399,10 @@ class _QuickToolsRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const items = <(IconData, String)>[
-      (Icons.shield_outlined, 'Safety'),
-      (Icons.support_agent_outlined, 'Support'),
-      (Icons.schedule_send_outlined, 'Schedule'),
-      (Icons.receipt_long_rounded, 'Invoices'),
+      (Icons.track_changes_rounded, 'Tracking'),
+      (Icons.person_add_alt_1_rounded, 'Recipients'),
+      (Icons.schedule_send_outlined, 'Reserve'),
+      (Icons.receipt_long_rounded, 'Quotes'),
     ];
 
     return Row(
@@ -452,9 +411,9 @@ class _QuickToolsRow extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.only(right: 8),
             child: Material(
-              color: const Color(0xFF13242B),
+              color: riderSurface,
               borderRadius: BorderRadius.circular(14),
-              shadowColor: const Color(0x33000000),
+              shadowColor: riderShadow,
               elevation: 1.5,
               child: InkWell(
                 onTap: () => onTap(item.$2),
@@ -463,12 +422,12 @@ class _QuickToolsRow extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   child: Column(
                     children: [
-                      Icon(item.$1, color: const Color(0xFF8FE6FF)),
+                      Icon(item.$1, color: riderAccentSoft),
                       const SizedBox(height: 6),
                       Text(
                         item.$2,
                         style: const TextStyle(
-                          color: Color(0xFFD5EAF2),
+                          color: riderTextPrimary,
                           fontWeight: FontWeight.w700,
                           fontSize: 12.5,
                         ),
@@ -506,14 +465,10 @@ class _PromoBanner extends StatelessWidget {
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
-            gradient: const LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Color(0xFF00A978), Color(0xFF1A7FA0)],
-            ),
+            color: riderAccent,
             boxShadow: const [
               BoxShadow(
-                color: Color(0x33000000),
+                color: riderShadow,
                 blurRadius: 14,
                 offset: Offset(0, 8),
               ),
@@ -521,7 +476,7 @@ class _PromoBanner extends StatelessWidget {
           ),
           child: Row(
             children: [
-              const Icon(Icons.local_offer_rounded, color: Colors.white, size: 30),
+              const Icon(Icons.local_offer_rounded, color: riderAccentText, size: 30),
               const SizedBox(width: 10),
               const Expanded(
                 child: Column(
@@ -530,21 +485,21 @@ class _PromoBanner extends StatelessWidget {
                     Text(
                       'Bundle Deal: 3 Rides + 1 Parcel',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: riderAccentText,
                         fontSize: 18,
                         fontWeight: FontWeight.w800,
                       ),
                     ),
                     Text(
-                      'Limited for this week only',
-                      style: TextStyle(color: Color(0xFFDFF8FF)),
+                      'Save on one parcel and one rental booking',
+                      style: TextStyle(color: Color(0xFF444444)),
                     ),
                   ],
                 ),
               ),
               IconButton(
                 onPressed: onClose,
-                icon: const Icon(Icons.close_rounded, color: Colors.white),
+                icon: const Icon(Icons.close_rounded, color: riderAccentText),
               ),
             ],
           ),

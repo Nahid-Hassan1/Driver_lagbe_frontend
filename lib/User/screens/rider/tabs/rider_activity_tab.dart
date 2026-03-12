@@ -5,6 +5,7 @@ import '../booking/booking_store.dart';
 import '../booking/payment_sheets.dart';
 import '../booking/rating_feedback_sheet.dart';
 import '../booking/trip_completion_sheet.dart';
+import '../rider_palette.dart';
 
 class RiderActivityTab extends StatefulWidget {
   const RiderActivityTab({super.key});
@@ -24,7 +25,7 @@ class _RiderActivityTabState extends State<RiderActivityTab> {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFF0A1215), Color(0xFF12232B), Color(0xFF070A0B)],
+          colors: [riderBlack, riderBackground, riderBlack],
           stops: [0.0, 0.45, 1.0],
         ),
       ),
@@ -52,12 +53,12 @@ class _RiderActivityTabState extends State<RiderActivityTab> {
               children: [
                 const Row(
                   children: [
-                    Icon(Icons.history_rounded, color: Color(0xFF8FE6FF), size: 28),
+                    Icon(Icons.history_rounded, color: riderAccentSoft, size: 28),
                     SizedBox(width: 8),
                     Text(
                       'Ride History',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: riderTextPrimary,
                         fontSize: 30,
                         fontWeight: FontWeight.w800,
                       ),
@@ -68,7 +69,7 @@ class _RiderActivityTabState extends State<RiderActivityTab> {
                 const Text(
                   'Past rides, invoices, and driver feedback in one place.',
                   style: TextStyle(
-                    color: Color(0xFFB0C5CF),
+                    color: riderTextSecondary,
                     fontSize: 14,
                   ),
                 ),
@@ -93,13 +94,13 @@ class _RiderActivityTabState extends State<RiderActivityTab> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF13242B),
+                      color: riderSurface,
                       borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: const Color(0xFF26424D)),
+                      border: Border.all(color: riderBorder),
                     ),
                     child: Text(
                       'No $_selectedSegment trips yet.',
-                      style: const TextStyle(color: Color(0xFFB7CAD3)),
+                      style: const TextStyle(color: riderTextSecondary),
                     ),
                   )
                 else
@@ -219,20 +220,20 @@ Total paid: BDT ${fare.totalBdt}
   void _showBookingDetails(BookingRequest booking) {
     showModalBottomSheet<void>(
       context: context,
-      backgroundColor: const Color(0xFF0F1A1E),
+      backgroundColor: riderBlack,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (context) {
         final ButtonStyle sheetActionStyle = OutlinedButton.styleFrom(
-          foregroundColor: const Color(0xFFE3F4FB),
-          backgroundColor: const Color(0x141A3642),
-          side: const BorderSide(color: Color(0xFF3A5F6D)),
+          foregroundColor: riderTextPrimary,
+          backgroundColor: riderSurfaceAlt,
+          side: const BorderSide(color: riderBorderStrong),
           textStyle: const TextStyle(
             fontWeight: FontWeight.w700,
             fontSize: 15,
           ),
-          iconColor: const Color(0xFFE3F4FB),
+          iconColor: riderTextPrimary,
         );
 
         return Padding(
@@ -244,7 +245,7 @@ Total paid: BDT ${fare.totalBdt}
               Text(
                 'Booking #${booking.id}',
                 style: const TextStyle(
-                  color: Colors.white,
+                  color: riderTextPrimary,
                   fontSize: 24,
                   fontWeight: FontWeight.w800,
                 ),
@@ -253,7 +254,7 @@ Total paid: BDT ${fare.totalBdt}
               Text(
                 '${booking.pickupLocation} -> ${booking.dropOffLocation}',
                 style: TextStyle(
-                  color: Color(0xFFB2C2CC),
+                  color: riderTextSecondary,
                   fontSize: 15,
                 ),
               ),
@@ -261,14 +262,14 @@ Total paid: BDT ${fare.totalBdt}
               Text(
                 'Status: ${booking.status.label}',
                 style: const TextStyle(
-                  color: Color(0xFFB2C2CC),
+                  color: riderTextSecondary,
                   fontSize: 14,
                 ),
               ),
               Text(
                 'Time: ${formatBookingDateTime(booking.completedAt ?? booking.bookedFor)}',
                 style: const TextStyle(
-                  color: Color(0xFFB2C2CC),
+                  color: riderTextSecondary,
                   fontSize: 14,
                 ),
               ),
@@ -315,8 +316,8 @@ Total paid: BDT ${fare.totalBdt}
                 child: FilledButton(
                   onPressed: () => Navigator.of(context).pop(),
                   style: FilledButton.styleFrom(
-                    backgroundColor: const Color(0xFF2AE0A0),
-                    foregroundColor: const Color(0xFF0A1814),
+                    backgroundColor: riderAccent,
+                    foregroundColor: riderAccentText,
                   ),
                   child: const Text('Continue'),
                 ),
@@ -356,9 +357,9 @@ class _StatsRow extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.only(right: 8),
             child: Material(
-              color: const Color(0xFF13242B),
+              color: riderSurface,
               borderRadius: BorderRadius.circular(14),
-              shadowColor: const Color(0x33000000),
+              shadowColor: riderShadow,
               elevation: 1.5,
               child: InkWell(
                 onTap: () => onCardTap(item.$2),
@@ -370,7 +371,7 @@ class _StatsRow extends StatelessWidget {
                       Text(
                         item.$1,
                         style: const TextStyle(
-                          color: Colors.white,
+                          color: riderTextPrimary,
                           fontSize: 18,
                           fontWeight: FontWeight.w800,
                         ),
@@ -380,7 +381,7 @@ class _StatsRow extends StatelessWidget {
                         item.$2,
                         textAlign: TextAlign.center,
                         style: const TextStyle(
-                          color: Color(0xFFB7CAD3),
+                          color: riderTextSecondary,
                           fontSize: 12.5,
                         ),
                       ),
@@ -411,12 +412,12 @@ class _SegmentSwitch extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(6),
       decoration: BoxDecoration(
-        color: const Color(0xFF101C22),
+        color: riderSurfaceAlt,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFF223641)),
+        border: Border.all(color: riderBorder),
         boxShadow: const [
           BoxShadow(
-            color: Color(0x22000000),
+            color: riderShadow,
             blurRadius: 8,
             offset: Offset(0, 4),
           ),
@@ -427,7 +428,7 @@ class _SegmentSwitch extends StatelessWidget {
           final selected = selectedSegment == segment;
           return Expanded(
             child: Material(
-              color: selected ? const Color(0xFF2AE0A0) : Colors.transparent,
+              color: selected ? riderAccent : Colors.transparent,
               borderRadius: BorderRadius.circular(10),
               child: InkWell(
                 onTap: () => onTap(segment),
@@ -438,7 +439,7 @@ class _SegmentSwitch extends StatelessWidget {
                     segment,
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      color: selected ? const Color(0xFF062219) : const Color(0xFFCAE2EB),
+                      color: selected ? riderAccentText : riderTextPrimary,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -486,12 +487,12 @@ class _TimelineCard extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: const Color(0xFF13242B),
+              color: riderSurface,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0xFF26424D)),
+              border: Border.all(color: riderBorder),
               boxShadow: const [
                 BoxShadow(
-                  color: Color(0x22000000),
+                  color: riderShadow,
                   blurRadius: 10,
                   offset: Offset(0, 6),
                 ),
@@ -505,10 +506,10 @@ class _TimelineCard extends StatelessWidget {
                     width: 42,
                     height: 42,
                     decoration: BoxDecoration(
-                      color: const Color(0xFF1E3A45),
+                      color: riderSurfaceRaised,
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: const Icon(Icons.route_rounded, color: Color(0xFF8FE6FF)),
+                    child: const Icon(Icons.route_rounded, color: riderAccentSoft),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -518,7 +519,7 @@ class _TimelineCard extends StatelessWidget {
                         Text(
                           title,
                           style: const TextStyle(
-                            color: Colors.white,
+                            color: riderTextPrimary,
                             fontSize: 16,
                             fontWeight: FontWeight.w700,
                           ),
@@ -526,7 +527,7 @@ class _TimelineCard extends StatelessWidget {
                         Text(
                           subtitle,
                           style: const TextStyle(
-                            color: Color(0xFFB8CED7),
+                            color: riderTextSecondary,
                             fontSize: 13.5,
                           ),
                         ),
@@ -539,7 +540,7 @@ class _TimelineCard extends StatelessWidget {
                       Text(
                         amount,
                         style: const TextStyle(
-                          color: Colors.white,
+                          color: riderTextPrimary,
                           fontWeight: FontWeight.w800,
                         ),
                       ),
@@ -547,13 +548,13 @@ class _TimelineCard extends StatelessWidget {
                         margin: const EdgeInsets.only(top: 4),
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(
-                          color: _statusColor(status),
+                          color: riderStatusColor(status),
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: Text(
                           status,
                           style: const TextStyle(
-                            color: Color(0xFFD5FFE8),
+                            color: riderAccentText,
                             fontSize: 11.5,
                             fontWeight: FontWeight.w700,
                           ),
@@ -572,7 +573,7 @@ class _TimelineCard extends StatelessWidget {
                         ? 'Comment: ${comment ?? ''}'
                         : 'Your rating: ${'⭐' * rating!}${comment == null || comment!.isEmpty ? '' : '  |  ${comment!}'}',
                     style: const TextStyle(
-                      color: Color(0xFF9CF2B8),
+                      color: riderAccentSoft,
                       fontSize: 12.5,
                       fontWeight: FontWeight.w700,
                     ),
@@ -608,18 +609,6 @@ class _TimelineCard extends StatelessWidget {
     );
   }
 
-  Color _statusColor(String statusLabel) {
-    switch (statusLabel) {
-      case 'Requested':
-        return const Color(0xFF1B4D5F);
-      case 'Ongoing':
-        return const Color(0xFF2A5C7D);
-      case 'Cancelled':
-        return const Color(0xFF6A3242);
-      default:
-        return const Color(0xFF1E5F4F);
-    }
-  }
 }
 
 class _RebookCard extends StatelessWidget {
@@ -639,27 +628,23 @@ class _RebookCard extends StatelessWidget {
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
-            gradient: const LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Color(0xFF2668D8), Color(0xFF00A978)],
-            ),
+            color: riderAccent,
           ),
           child: const Row(
             children: [
-              Icon(Icons.replay_rounded, color: Colors.white),
+              Icon(Icons.replay_rounded, color: riderAccentText),
               SizedBox(width: 10),
               Expanded(
                 child: Text(
                   'Rebook your most frequent route',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: riderAccentText,
                     fontSize: 17,
                     fontWeight: FontWeight.w800,
                   ),
                 ),
               ),
-              Icon(Icons.arrow_forward_ios_rounded, color: Colors.white70, size: 16),
+              Icon(Icons.arrow_forward_ios_rounded, color: Color(0x99000000), size: 16),
             ],
           ),
         ),
